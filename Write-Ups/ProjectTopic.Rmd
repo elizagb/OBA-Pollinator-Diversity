@@ -80,11 +80,12 @@ These initial cleaning steps are essential to remove any inconsistencies in the 
 ### Step 2: Data Integration and Preparation
 Once the data has been cleaned, we will integrate the OBA dataset with the NLCD data to assign each bee occurrence record to a specific land cover type. This will involve:
 
-- **Spatial overlay**: Using the geographic coordinates from the OBA dataset, we will overlay the bee occurrence points on the NLCD land cover map. This process will classify each observation as occurring within either a grassland or mixed forest habitat.
-- **Elevation categorization**: We will divide the samples into distinct elevational bands:
-    - Low (...)
-    - Middle (...)
-    - High (...)
+- **Spatial overlay**: Using the pollinator samples and their coordesponding coordinates from the OBA dataset, we will overlay the bee occurrence points on the NLCD land cover map. This process will classify certain observations as occurring within grassland or mixed forest land cover types. 
+
+- **Elevation categorization**: We will divide the samples into distinct elevational bands. We will do so by finding the lower quartile (Q1), mean (Q2), and upper quartile (Q3) values for all OBA samples. 
+    - Low (Average elevation for a selected region is no less than 50 meters under and no more than 50 meters above Q1)
+    - Middle (Average elevation for a selected region is no less than 50 meters under and no more than 50 meters above Q2)
+    - High (Average elevation for a selected region is no less than 50 meters under and no more than 50 meters above Q3)
   
 This will ensure that we can control for elevation while focusing on the effects of land type.
 
@@ -115,4 +116,16 @@ The final step will involve interpreting the results of our analyses:
 By following this detailed workflow, we aim to provide a robust analysis of how land cover types affect pollinator diversity in Oregon, ultimately contributing to informed conservation efforts.
 
 ## IV. Partner contributions
+
+Eliza:  
+
+-I Identified the additional datasets we will be using, as well as their relevant dataset  
+-I completed the first step of the literature review: “Introduce the problem and explain why” 
+
+
+Emmie: 
+
+-Found articles covering relative past work and data available and wrote the paragraph on this.  
+-Wrote the paragraph on Part 3, which is the Purpose of the Study.  
+-Wrote out research questions and hypotheses into paragraph form for Paragraph 4.  
 
