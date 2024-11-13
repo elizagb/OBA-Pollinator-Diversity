@@ -7,18 +7,16 @@ output: pdf_document
 
 ## I. Literature review
 
-We expect the literature review will be around 5 well-cited paragraphs that do the following:
+1. Introduce the problem and explain why:
+  Wild and managed pollinators benefit society in various ways, including bolstering food security, supporting livelihoods, enriching cultural values, and sustaining biodiversity and ecosystem health (Potts et al., 2016), which is why the study of them is a prominent subject in ecology. Pollinator populations are experiencing significant declines due to habitat loss and land-use changes such as deforestation and agricultural expansion, as well as wider “threats to global food supply and the stability of wider pollination systems in non-crop vegetation....[and] disruptions of numerous plant-pollinator systems” (Mader et al., 2011). This hypothesis tests how different land-use types–mixed forests and grasslands–impact pollinator diversity. Understanding which land-use types most support pollinator diversity is critical to understanding how habitat changes affect pollinator populations because it provides greater insight into which habitats pollinators rely most heavily on. Identifying which habitat types best support pollinator diversity can inform land management strategies to protect these populations because it can provide insight into which land-use types are most critical for pollinator diversity.  
 
-1. Introduce the problem and explain why
-  Pollinator populations are experiencing significant declines due to habitat loss and land-use changes such as deforestation and agricultural expansion, as well as wider “threats to global food supply and the stability of wider pollination systems in non-crop vegetation....[and] disruptions of numerous plant-pollinator systems” (Mader et al., 2011). This hypothesis tests how different land-use types–mixed forests and grasslands–impact pollinator diversity. Understanding which land-use types most support pollinator diversity is critical to understanding how habitat changes affect pollinator populations because it provides greater insight into which habitats pollinators rely most heavily on. Identifying which habitat types best support pollinator diversity can inform land management strategies to protect these populations because it can provide insight into which land-use types are most critical for pollinator diversity.  
-
-2. Past work and data available
-  Similar questions have been raised and answered in different regions around North America. For example, in Vermont, USA, Richardson et al. found that greater species diversity was correlated with grasslands and lower was correlated with deciduous and mixed forest cover (Richardson et al., 2019). In Southeastern United States, pine forests and extensive wetlands correlated negatively with bee richness, while open canopies correlated positively (Ulyshen et al., 2024). Our project looks to answer similar questions, specifically exploring Oregon. In addition to the dataset from OBA, we will be using the National Land Cover Database (NLCD), which is a dataset that provides land cover information across the country. 
+2. Past work and data available:
+  Similar questions have been raised and answered in different regions around North America. For example, in Vermont, USA, Richardson et al. found that greater species diversity was correlated with grasslands and lower was correlated with deciduous and mixed forest cover (Richardson et al., 2019). In Southeastern United States, pine forests and extensive wetlands correlated negatively with bee richness, while open canopies correlated positively (Ulyshen et al., 2024). Our project looks to answer similar questions, specifically exploring Oregon. In addition to the dataset from OBA, we will be using the National Land Cover Database (NLCD), which is a dataset that provides land cover information from across the country. 
   
-3. Purpose of the study
- We are going to overlay the species from the OBA dataset on the NLCD. We will differentiate between different ranges of elevation, using elevation data in meters provided by the OBA dataset. Within each elevation range, we will assess species diversity between Mixed Forest and Grassland land cover types using A/B testing. This will allow us to answer the question of how species diversity varies with land cover types specifically in Oregon state. Additionally, this method will allow for systematic assessment of these differences while controlling for elevation across these ranges.  
+3. Purpose of the study:
+  We are going to overlay the species from the OBA dataset on the NLCD. We will differentiate between different ranges of elevation, using elevation data in meters provided by the OBA dataset. Within each elevation range, we will assess species diversity between Mixed Forest and Grassland land cover types using A/B testing. This will allow us to answer the question of how species diversity varies with land cover types specifically in Oregon state. Additionally, this method will allow for systematic assessment of these differences while controlling for elevation across these ranges.  
 
-4. Hypotheses/questions
+4. Hypotheses/questions:
   The primary question we want to explore with our project is how does pollinator diversity change between grassland versus forested areas within specific elevational bands in Oregon? For our hypothesis, we predict that Grassland areas have greater bee species diversity and heterogeneity compared to forested areas within the same elevational band. The null hypothesis is that there is no variation in pollinator species diversity between grassland and forested areas in Oregon. Additionally, we would like to explore the effects of elevation on bee species diversity by comparing the diversity between elevation ranges.  
 
 ## II. Dataset identification
@@ -72,13 +70,13 @@ The goal of this study is to assess the impact of habitat type—specifically gr
 ### Step 1: Data Cleaning
 We will begin by importing and cleaning the raw datasets. This includes:
 
-- **Loading the datasets**: The OBA dataset will be loaded as a CSV file, and the NLCD dataset will be imported as an img file. We will then convert the OBA csv file to a spatial object and ensure that their formats are compatible, converting their attrbutes as needed. 
-
+- **Loading the datasets**: The OBA dataset will be loaded as a CSV file, and the NLCD dataset will be imported as an img file. We will then convert the OBA CSV file to a spatial object and ensure that their formats are compatible, converting their attributes as needed and checking the CRS for both. 
 
 - **Cleaning the OBA dataset**: The columns containing species, genus, elevation, latitude, and longitude data will be cleaned by removing extra spaces and excluding any null or blank entries. Column names will be standardized for consistency:
     - Rename `Dec..Lat.` to `Lat`
     - Rename `Dec..Long.` to `Long`
-    - Rename `Elevation..m` to `Elevation`
+    - Rename `Elevation..m` to `Elevation` 
+Rows without a valid entry for Elevation will be dropped. 
 - **Creating identifiers**: To ensure unique species identification, we will combine the `Species` and `Genus` columns into a new column called `GenusSpecies`.
 
 These initial cleaning steps are essential to remove any inconsistencies in the raw data, thereby improving the accuracy of subsequent analyses.
@@ -86,7 +84,7 @@ These initial cleaning steps are essential to remove any inconsistencies in the 
 ### Step 2: Data Integration and Preparation
 Once the data has been cleaned, we will integrate the OBA dataset with the NLCD data to assign each bee occurrence record to a specific land cover type. This will involve:
 
-- **Spatial overlay**: Using the pollinator samples and their coordesponding coordinates from the OBA dataset, we will overlay the bee occurrence points on the NLCD land cover map. This process will classify certain observations as occurring within grassland or mixed forest land cover types. 
+- **Spatial overlay**: Using the pollinator samples and their corresponding coordinates from the OBA dataset, we will overlay the bee occurrence points on the NLCD land cover map. This process will classify certain observations as occurring within grassland or mixed forest land cover types. 
 
 - **Elevation categorization**: We will divide the samples into distinct elevational bands. We will do so by finding the lower quartile (Q1), mean (Q2), and upper quartile (Q3) values for all OBA samples. 
     - Low (Average elevation for a selected region is no less than 50 meters under and no more than 50 meters above Q1)
@@ -96,7 +94,7 @@ Once the data has been cleaned, we will integrate the OBA dataset with the NLCD 
 This will ensure that we can control for elevation while focusing on the effects of land type.
 
 ### Step 3: Statistical Testing and Hypothesis Evaluation
-To test whether there is a significant difference in bee species diversity between grassland and forested areas, we will perform an A/B test that involve the following key steps:
+To test whether there is a significant difference in bee species diversity between grassland and forested areas, we will perform an A/B test that involves the following key steps:
 
 - **Hypothesis**: Grassland habitats support greater bee species diversity than mixed forests within the same elevational band. - **Null Hypothesis:** Assumes no difference in diversity between grassland and mixed forest habitat types.
   
@@ -125,8 +123,10 @@ By following this detailed workflow, we aim to provide a robust analysis of how 
 
 Eliza:  
 
--I identified the additional datasets we will be using, as well as their relevant dataset  
--I completed the first step of the literature review: “Introduce the problem and explain why” 
+-Identified the additional datasets we will be using  
+-Completed the first step of the literature review: “Introduce the problem and explain why”
+-Wrote most steps in the Workflow section 
+
 
 
 Emmie: 
@@ -140,6 +140,8 @@ Emmie:
 ## V. Sources
 
 New, T.R. Eric Mader, Matthew Shepherd, Mace Vaughan, Scott Hoffman Black and Gretchen LeBuhn: attracting native pollinators. Protecting North America’s bees and butterflies. The Xerces Society Guide. J Insect Conserv 15, 611–612 (2011). https://doi.org/10.1007/s10841-011-9409-4
+
+Potts, S., Imperatriz-Fonseca, V., Ngo, H. et al. Safeguarding pollinators and their values to human well-being. Nature 540, 220–229 (2016). https://doi.org/10.1038/nature20588
 
 Richardson, L.L., McFarland, K.P., Zahendra, S. et al. Bumble bee (Bombus) distribution and diversity in Vermont, USA: a century of change. J Insect Conserv 23, 45–62 (2019). https://doi.org/10.1007/s10841-018-0113-5
 
