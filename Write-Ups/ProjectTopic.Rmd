@@ -16,10 +16,10 @@ We expect the literature review will be around 5 well-cited paragraphs that do t
   Similar questions have been raised and answered in different regions around North America. For example, in Vermont, USA, Richardson et al. found that greater species diversity was correlated with grasslands and lower was correlated with deciduous and mixed forest cover (Richardson et al., 2019). In Southeastern United States, pine forests and extensive wetlands correlated negatively with bee richness, while open canopies correlated positively (Ulyshen et al., 2024). Our project looks to answer similar questions, specifically exploring Oregon. In addition to the dataset from OBA, we will be using the National Land Cover Database (NLCD), which is a dataset that provides land cover information across the country. 
   
 3. Purpose of the study
- We are going to overlay the species from the OBA dataset on the NLCD. We will differentiate between different ranges of elevation, using elevation data in meters provided by the OBA dataset. Within each elevation range, we will assess species diversity between Mixed Forest and Grassland land cover types using A/B testing. This will allow us to answer the question of how species diversity varies with land cover types specifically in Oregon state. Additionally, this method will allow for systematic assessment of these differences while controlling for elevation across these ranges.  
+ We are going to overlay the species from the OBA dataset on the NLCD. We will differentiate between different ranges of elevation, using elevation data in meters provided by the OBA dataset. Within each elevation range, we will assess species diversity between Mixed Forest and Grassland land cover types using A/B testing. This will allow us to answer the question of how species diversity varies with land cover types specifically in Oregon. Additionally, this method will allow for systematic assessment of these differences while controlling for elevation across these ranges.  
 
 4. Hypotheses/questions
-  The primary question we want to explore with our project is how does pollinator diversity change between grassland versus forested areas within specific elevational bands in Oregon? For our hypothesis, we predict that Grassland areas have greater bee species diversity and heterogeneity compared to forested areas within the same elevational band. The null hypothesis is that there is no variation in pollinator species diversity between grassland and forested areas in Oregon. Additionally, we would like to explore the effects of elevation on bee species diversity by comparing the diversity between elevation ranges.  
+  The primary question we want to explore with our project is: how does pollinator diversity change between grassland versus forested areas within specific elevation bands in Oregon? For our hypothesis, we predict that Grassland areas have greater bee species diversity and heterogeneity compared to forested areas within the same elevation band. The null hypothesis is that there is no variation in pollinator species diversity between grassland and forested areas in Oregon. Additionally, we would like to explore the effects of elevation on bee species diversity by comparing the diversity between elevation ranges.  
 
 ## II. Dataset identification
 
@@ -27,8 +27,7 @@ We will utilize two primary datasets to address our research question on how mix
 
 ### 1. Oregon Bee Atlas (OBA)
 - **Data Source**: Oregon Bee Atlas (OBA)  
-- **Description**: The OBA dataset is compiled by a collaboration of citizen scientists and professional entomologists throughout Oregon. The dataset includes extensive records on bee species, along with their geographic and environmental context.
-- **URL**: 
+- **Description**: The OBA dataset is compiled by citizen scientists and professional entomologists throughout Oregon. The dataset includes extensive records on bee species, along with geographic and environmental metaadata.
 - **Metadata**:
   - `Species`: The taxonomic identification of each bee recorded.
   - `Elevation`: The elevation (in meters) at which each bee was collected.
@@ -42,7 +41,7 @@ We will utilize two primary datasets to address our research question on how mix
 - **URL**: [https://geohub.oregon.gov/documents/9bbaa64718774bbfbf5c6ade0edf86d3/about](https://geohub.oregon.gov/documents/9bbaa64718774bbfbf5c6ade0edf86d3/about)
   
 **Metadata**:
-- Provides detailed land cover classifications, with attributes such as:
+- Provides detailed land cover classifications. The study will make use of the following classifications:
 
   - **Grassland/Herbaceous**:
     - *Enumerated Domain Value*: `71`
@@ -57,8 +56,7 @@ We will utilize two primary datasets to address our research question on how mix
   - *Published*: January 2019  
   - *Updated*: November 2023  
   - *Publisher*: U.S. Geological Survey (USGS)  
-  - *References*:  
-    Yang, L., et al. (2018). *A new generation of the United States National Land Cover Database: Requirements, research priorities, design, and implementation strategies*. ISPRS Journal of Photogrammetry and Remote Sensing, 146: 108-123.
+  - *References*: Yang, L., et al. (2018). *A new generation of the United States National Land Cover Database: Requirements, research priorities, design, and implementation strategies*. ISPRS Journal of Photogrammetry and Remote Sensing, 146: 108-123.
 
   
   
@@ -86,9 +84,9 @@ These initial cleaning steps are essential to remove any inconsistencies in the 
 ### Step 2: Data Integration and Preparation
 Once the data has been cleaned, we will integrate the OBA dataset with the NLCD data to assign each bee occurrence record to a specific land cover type. This will involve:
 
-- **Spatial overlay**: Using the pollinator samples and their coordesponding coordinates from the OBA dataset, we will overlay the bee occurrence points on the NLCD land cover map. This process will classify certain observations as occurring within grassland or mixed forest land cover types. 
+- **Spatial overlay**: Using the pollinator samples and their corresponding coordinates from the OBA data set, we will overlay the bee occurrence points on the NLCD land cover map. This process will classify certain observations as occurring within grassland or mixed forest land cover types. 
 
-- **Elevation categorization**: We will divide the samples into distinct elevational bands. We will do so by finding the lower quartile (Q1), mean (Q2), and upper quartile (Q3) values for all OBA samples. 
+- **Elevation categorization**: We will divide the samples into distinct elevation bands. We will do so by finding the lower quartile (Q1), mean (Q2), and upper quartile (Q3) values for all OBA samples. 
     - Low (Average elevation for a selected region is no less than 50 meters under and no more than 50 meters above Q1)
     - Middle (Average elevation for a selected region is no less than 50 meters under and no more than 50 meters above Q2)
     - High (Average elevation for a selected region is no less than 50 meters under and no more than 50 meters above Q3)
@@ -98,7 +96,7 @@ This will ensure that we can control for elevation while focusing on the effects
 ### Step 3: Statistical Testing and Hypothesis Evaluation
 To test whether there is a significant difference in bee species diversity between grassland and forested areas, we will perform an A/B test that involve the following key steps:
 
-- **Hypothesis**: Grassland habitats support greater bee species diversity than mixed forests within the same elevational band. - **Null Hypothesis:** Assumes no difference in diversity between grassland and mixed forest habitat types.
+- **Hypothesis**: Grassland habitats support greater bee species diversity than mixed forests within the same elevation band. - **Null Hypothesis:** Assumes no difference in diversity between grassland and mixed forest habitat types.
   
 - **Diversity metrics**: To quantify species diversity, we will calculate the *proportion of unique species*. This will be calculated by dividing the number of unique species by the total number of observations. This will account for variation in sample sizes in each region. 
 
@@ -116,18 +114,20 @@ The following types of visualizations will effectively display our findings:
 #### Step 5: Interpretation and Implications
 The final step will involve interpreting the results of our analyses:
 
-- If the hypothesis is supported, we expect to see a statistically significant difference indicating that grassland habitats have higher species richness and heterogeneity compared to mixed forests. 
-- These findings would suggest that grassland areas are more critical for supporting pollinator diversity, which could have implications for conservation strategies and land management practices. Identifying the habitats that best support pollinator populations is essential for protecting these crucial species amid ongoing habitat loss and land-use changes.
+- If the hypothesis is supported, we expect to see a statistically significant difference indicating that grassland habitats have higher species diversity compared to mixed forests. 
+- These findings would suggest that grassland areas are more critical for supporting pollinator diversity, which could help inform pollinator conservation strategies. 
 
-By following this detailed workflow, we aim to provide a robust analysis of how land cover types affect pollinator diversity in Oregon, ultimately contributing to informed conservation efforts.
+By following this detailed workflow, we aim to provide an analysis of how land cover types (particularly mixed forests and grasslands) affect pollinator diversity in Oregon, ultimately contributing to informed conservation efforts.
 
 ## IV. Partner contributions
 
 Eliza:  
 
--I identified the additional datasets we will be using, as well as their relevant dataset  
--I completed the first step of the literature review: “Introduce the problem and explain why” 
-
+-Identified the additional data sets we will be using, as well as their relevant dataset (Part 2: dataset identification)
+-Completed the first step of the literature review: “Introduce the problem and explain why” 
+-Step 2: Data Integration and Preparation
+-Built out the Step 3: Workflow plan
+-Collaborated with Emmie in-person for the creation of the whole document.
 
 Emmie: 
 
@@ -135,6 +135,7 @@ Emmie:
 -Wrote the paragraph on Part 3, which is the Purpose of the Study.  
 -Wrote out research questions and hypotheses into paragraph form for Paragraph 4.  
 -Added steps to A/B testing in the Workflow section. 
+-Collaborated with Eliza in-person for the creation of the whole document.
 
 ## V. Sources
 
