@@ -136,3 +136,11 @@ Emmie:
 -Wrote out research questions and hypotheses into paragraph form for Paragraph 4.  
 -Added steps to A/B testing in the Workflow section. 
 
+## V. Sources
+
+New, T.R. Eric Mader, Matthew Shepherd, Mace Vaughan, Scott Hoffman Black and Gretchen LeBuhn: attracting native pollinators. Protecting North America’s bees and butterflies. The Xerces Society Guide. J Insect Conserv 15, 611–612 (2011). https://doi.org/10.1007/s10841-011-9409-4
+
+Richardson, L.L., McFarland, K.P., Zahendra, S. et al. Bumble bee (Bombus) distribution and diversity in Vermont, USA: a century of change. J Insect Conserv 23, 45–62 (2019). https://doi.org/10.1007/s10841-018-0113-5
+
+Ulyshen, Michael, et al. “Spatiotemporal Patterns of Forest Pollinator Diversity across the Southeastern United States.” Diversity and Distributions, vol. 30, no. 8, 2024, pp. 1–13. JSTOR, https://www.jstor.org/stable/48780052. Accessed 13 Nov. 2024.
+
