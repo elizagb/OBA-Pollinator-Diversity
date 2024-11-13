@@ -130,4 +130,5 @@ Emmie:
 -Found articles covering relative past work and data available and wrote the paragraph on this.  
 -Wrote the paragraph on Part 3, which is the Purpose of the Study.  
 -Wrote out research questions and hypotheses into paragraph form for Paragraph 4.  
+-Added steps to A/B testing in the Workflow section. 
 
