@@ -98,7 +98,8 @@ To test whether there is a significant difference in bee species diversity betwe
 
 - **Setting up the A/B test**:
     - We will compute the observed difference in pollinator species diversity between grassland and forest habitats.
-    - (STEPS IN BETWEEN)
+    - First, we will shuffle the labels (Mixed Forest vs Grassland) on our original dataset, and calculate the test statistic for this simulated dataset. 
+    - After running this 
     - We will then compare the observed difference to this null distribution to calculate a *p-value*. If the observed difference falls outside the 95% confidence interval of the null distribution, we will reject the null hypothesis, indicating a significant effect of habitat type on species diversity.
 
 ### Step 4: Visualization and Data Analysis
