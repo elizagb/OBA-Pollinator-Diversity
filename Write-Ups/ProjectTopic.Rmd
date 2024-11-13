@@ -15,12 +15,10 @@ We expect the literature review will be around 5 well-cited paragraphs that do t
 - Lots of big-picture citations (such as reviews) in the first paragraph
 
 2. Past work and data available
-  Similar questions have been raised and answered in different regions around North America. In Vermont, USA, it was found that greater species diversity was correlated with grasslands and lower was correlated with deciduous and mixed forest cover (Richardson et al., 2019). In Southeastern United States, pine forests and extensive wetlands correlated negatively with bee richness, while open canopies correlated positively (Ulyshen et al., 2024). Our project looks to answer similar questions, specifically exploring Oregon. In addition to the dataset from OBA, we will be using the National Land Cover Database (NLCB), which is a dataset that provides land cover information across the country. 
+  Similar questions have been raised and answered in different regions around North America. For example, in Vermont, USA, Richardson et al. found that greater species diversity was correlated with grasslands and lower was correlated with deciduous and mixed forest cover (Richardson et al., 2019). In Southeastern United States, pine forests and extensive wetlands correlated negatively with bee richness, while open canopies correlated positively (Ulyshen et al., 2024). Our project looks to answer similar questions, specifically exploring Oregon. In addition to the dataset from OBA, we will be using the National Land Cover Database (NLCD), which is a dataset that provides land cover information across the country. 
   
 3. Purpose of the study
-- Further refine your approach (e.g., what data will you combine, how will you address the question)
-- Justify why this is needed now (e.g., visualization to test a new dimension of the question or better convey an old one)
- 
+ We are going to overlay the species from the OBA dataset on the NLCD. We will differentiate between different ranges of elevation, using elevation data in meters provided by the OBA dataset. Within each elevation range, we will assess species diversity between Mixed Forest and Grassland land cover types using A/B testing. This will allow us to answer the question of how species diversity varies with land cover types specifically in Oregon state. Additionally, this method will allow for systematic assessment of these differences while controlling for elevation across these ranges.  
 
 4. Hypotheses/questions
 - List these clearly and in a logical order
