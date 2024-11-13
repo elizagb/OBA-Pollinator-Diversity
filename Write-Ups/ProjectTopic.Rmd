@@ -112,9 +112,9 @@ To test whether there is a significant difference in bee species diversity betwe
 
 ### Step 4: Visualization and Data Analysis
 The following types of visualizations will effectively display our findings: 
-
+- **Geographic Plot**: Plot the relevant OBA data points overlayed on the land cover regions.
 - **Boxplots**: To compare unique species proportion across the two habitat types within each elevational band. 
-- **Heatmaps and Venn diagrams**: To highlight the overlaps in pollinator diversity and species found at each habitat type.
+- **Venn diagrams**: To highlight the overlaps in pollinator diversity and species found at each habitat type.
 
 #### Step 5: Interpretation and Implications
 The final step will involve interpreting the results of our analyses:
