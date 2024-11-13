@@ -35,27 +35,31 @@ We will utilize two primary datasets to address our research question on how mix
   - `Coordinates`: Latitude (`Dec.Lat.`) and longitude (`Dec.Long.`) in decimal degrees.
   
 ### 2. National Land Cover Database (NLCD) - Oregon
-- **Data Source**: National Land Cover Database (NLCD) - Oregon  
-- **Description**: This dataset is part of the Oregon GIS Framework and has been specifically clipped to the Oregon state boundary. The dataset is projected in Oregon Lambert (EPSG:2992) and provides comprehensive classifications of land cover types, including grassland and forested areas.
+**Data Source**: National Land Cover Database (NLCD) - Oregon  
+
+**Description**: This dataset is part of the Oregon GIS Framework and has been specifically clipped to the Oregon state boundary. The dataset is projected in Oregon Lambert (EPSG:2992) and provides comprehensive classifications of land cover types, including grassland and forested areas.
+
 - **URL**: [https://geohub.oregon.gov/documents/9bbaa64718774bbfbf5c6ade0edf86d3/about](https://geohub.oregon.gov/documents/9bbaa64718774bbfbf5c6ade0edf86d3/about)
   
 **Metadata**:
 - Provides detailed land cover classifications, with attributes such as:
-  - **Grassland/Herbaceous**:
-    - **Enumerated Domain Value**: `71`
-    - **Definition**: Areas dominated by graminoid or herbaceous vegetation, with greater than 80% total vegetation cover. These areas are generally not intensively managed (e.g., not tilled) but may be used for grazing.
-    - **Source**: NLCD Legend Land Cover Class Descriptions.
-  - **Mixed Forest**:
-    - **Enumerated Domain Value**: `43`
-    - **Definition**: Areas characterized by trees taller than 5 meters, with neither deciduous nor evergreen species exceeding 75% of total tree cover.
-    - **Source**: NLCD Legend Land Cover Class Descriptions.
 
-#### Publication Information
-- **Published**: January 2019  
-- **Updated**: November 2023  
-- **Publisher**: U.S. Geological Survey (USGS)  
-- **References**:  
-  Yang, L., et al. (2018). *A new generation of the United States National Land Cover Database: Requirements, research priorities, design, and implementation strategies*. ISPRS Journal of Photogrammetry and Remote Sensing, 146: 108-123.
+  - **Grassland/Herbaceous**:
+    - *Enumerated Domain Value*: `71`
+    - *Definition*: Areas dominated by graminoid or herbaceous vegetation, with greater than 80% total vegetation cover. These areas are generally not intensively managed (e.g., not tilled) but may be used for grazing.
+    - *Source*: NLCD Legend Land Cover Class Descriptions.
+  - **Mixed Forest**:
+    - *Enumerated Domain Value*: `43`
+    - *Definition*: Areas characterized by trees taller than 5 meters, with neither deciduous nor evergreen species exceeding 75% of total tree cover.
+    - *Source*: NLCD Legend Land Cover Class Descriptions.
+
+- **Publication Information**:
+  - *Published*: January 2019  
+  - *Updated*: November 2023  
+  - *Publisher*: U.S. Geological Survey (USGS)  
+  - *References*:  
+    Yang, L., et al. (2018). *A new generation of the United States National Land Cover Database: Requirements, research priorities, design, and implementation strategies*. ISPRS Journal of Photogrammetry and Remote Sensing, 146: 108-123.
+
   
   
 
