@@ -10,9 +10,7 @@ output: pdf_document
 We expect the literature review will be around 5 well-cited paragraphs that do the following:
 
 1. Introduce the problem and explain why
-- Set the stage for the problem
-- Put the concept and question into context
-- Lots of big-picture citations (such as reviews) in the first paragraph
+ Similar questions have been raised and answered in different regions around North America. For example, in Vermont, USA, Richardson et al. found that greater species diversity was correlated with grasslands and lower was correlated with deciduous and mixed forest cover (Richardson et al., 2019). In Southeastern United States, pine forests and extensive wetlands correlated negatively with bee richness, while open canopies correlated positively (Ulyshen et al., 2024). Our project looks to answer similar questions, specifically exploring Oregon. In addition to the dataset from OBA, we will be using the National Land Cover Database (NLCD), which is a dataset that provides land cover information across the country. 
 
 2. Past work and data available
   Similar questions have been raised and answered in different regions around North America. For example, in Vermont, USA, Richardson et al. found that greater species diversity was correlated with grasslands and lower was correlated with deciduous and mixed forest cover (Richardson et al., 2019). In Southeastern United States, pine forests and extensive wetlands correlated negatively with bee richness, while open canopies correlated positively (Ulyshen et al., 2024). Our project looks to answer similar questions, specifically exploring Oregon. In addition to the dataset from OBA, we will be using the National Land Cover Database (NLCD), which is a dataset that provides land cover information across the country. 
