@@ -19,17 +19,7 @@ We expect the literature review will be around 5 well-cited paragraphs that do t
  We are going to overlay the species from the OBA dataset on the NLCD. We will differentiate between different ranges of elevation, using elevation data in meters provided by the OBA dataset. Within each elevation range, we will assess species diversity between Mixed Forest and Grassland land cover types using A/B testing. This will allow us to answer the question of how species diversity varies with land cover types specifically in Oregon state. Additionally, this method will allow for systematic assessment of these differences while controlling for elevation across these ranges.  
 
 4. Hypotheses/questions
-- List these clearly and in a logical order
-- Make hypotheses directionally using predictions (e.g. “I predict urbanization will reduce plant diversity” rather than “I predict urbanization will change plant diversity”)
-
-- How does pollinator diversity change between grassland versus forested areas within specific elevational bands in Oregon? 
-- We predict that Grassland areas have greater bee species diversity and heterogeneity compared to forested areas within the same elevational band.   
-- The null hypothesis is that there is no variation in pollinator species diversity between grassland and forested areas in Oregon. 
-
-This is a great reference on scientific writing: Turbek, Sheela P., Taylor M. Chock, Kyle Donahue, Caroline A. Havrilla, Angela M. Oliverio, Stephanie K. Polutchko, Lauren G. Shoemaker, and Lara Vimercati. “Scientific Writing Made Easy: A Step-by-Step Guide to Undergraduate Writing in the Biological Sciences.” The Bulletin of the Ecological Society of America 97, no. 4 (October 2016): 417–26. https://doi.org/10.1002/bes2.1258
-Links to an external site..
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+  The primary question we want to explore with our project is how does pollinator diversity change between grassland versus forested areas within specific elevational bands in Oregon? For our hypothesis, we predict that Grassland areas have greater bee species diversity and heterogeneity compared to forested areas within the same elevational band. The null hypothesis is that there is no variation in pollinator species diversity between grassland and forested areas in Oregon. Additionally, we would like to explore the effects of elevation on bee species diversity by comparing the diversity between elevation ranges.  
 
 ## II. Dataset identification
 
