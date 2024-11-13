@@ -10,7 +10,7 @@ output: pdf_document
 We expect the literature review will be around 5 well-cited paragraphs that do the following:
 
 1. Introduce the problem and explain why
- Similar questions have been raised and answered in different regions around North America. For example, in Vermont, USA, Richardson et al. found that greater species diversity was correlated with grasslands and lower was correlated with deciduous and mixed forest cover (Richardson et al., 2019). In Southeastern United States, pine forests and extensive wetlands correlated negatively with bee richness, while open canopies correlated positively (Ulyshen et al., 2024). Our project looks to answer similar questions, specifically exploring Oregon. In addition to the dataset from OBA, we will be using the National Land Cover Database (NLCD), which is a dataset that provides land cover information across the country. 
+  Pollinator populations are experiencing significant declines due to habitat loss and land-use changes such as deforestation and agricultural expansion, as well as wider “threats to global food supply and the stability of wider pollination systems in non-crop vegetation....[and] disruptions of numerous plant-pollinator systems” (Mader et al., 2011). This hypothesis tests how different land-use types–mixed forests and grasslands–impact pollinator diversity. Understanding which land-use types most support pollinator diversity is critical to understanding how habitat changes affect pollinator populations because it provides greater insight into which habitats pollinators rely most heavily on. Identifying which habitat types best support pollinator diversity can inform land management strategies to protect these populations because it can provide insight into which land-use types are most critical for pollinator diversity.  
 
 2. Past work and data available
   Similar questions have been raised and answered in different regions around North America. For example, in Vermont, USA, Richardson et al. found that greater species diversity was correlated with grasslands and lower was correlated with deciduous and mixed forest cover (Richardson et al., 2019). In Southeastern United States, pine forests and extensive wetlands correlated negatively with bee richness, while open canopies correlated positively (Ulyshen et al., 2024). Our project looks to answer similar questions, specifically exploring Oregon. In addition to the dataset from OBA, we will be using the National Land Cover Database (NLCD), which is a dataset that provides land cover information across the country. 
@@ -28,7 +28,7 @@ We will utilize two primary datasets to address our research question on how mix
 ### 1. Oregon Bee Atlas (OBA)
 - **Data Source**: Oregon Bee Atlas (OBA)  
 - **Description**: The OBA dataset is compiled by a collaboration of citizen scientists and professional entomologists throughout Oregon. The dataset includes extensive records on bee species, along with their geographic and environmental context.
-- **URL**: *(Add exact URL link if available)*
+- **URL**: 
 - **Metadata**:
   - `Species`: The taxonomic identification of each bee recorded.
   - `Elevation`: The elevation (in meters) at which each bee was collected.
@@ -68,7 +68,9 @@ The goal of this study is to assess the impact of habitat type—specifically gr
 ### Step 1: Data Cleaning
 We will begin by importing and cleaning the raw datasets. This includes:
 
-- **Loading the datasets**: The OBA dataset will be loaded as a CSV file, and the NLCD dataset will be imported as a shapefile. Both will be converted into appropriate formats for spatial analysis.
+- **Loading the datasets**: The OBA dataset will be loaded as a CSV file, and the NLCD dataset will be imported as an img file. We will then convert the OBA csv file to a spatial object and ensure that their formats are compatible, converting their attrbutes as needed. 
+
+
 - **Cleaning the OBA dataset**: The columns containing species, genus, elevation, latitude, and longitude data will be cleaned by removing extra spaces and excluding any null or blank entries. Column names will be standardized for consistency:
     - Rename `Dec..Lat.` to `Lat`
     - Rename `Dec..Long.` to `Long`
@@ -97,10 +99,9 @@ To test whether there is a significant difference in bee species diversity betwe
 - **Diversity metrics**: To quantify species diversity, we will calculate the *proportion of unique species*. This will be calculated by dividing the number of unique species by the total number of observations. This will account for variation in sample sizes in each region. 
 
 - **Setting up the A/B test**:
-    - We will compute the observed difference in pollinator species diversity between grassland and forest habitats.
-    - First, we will shuffle the labels (Mixed Forest vs Grassland) on our original dataset, and calculate the test statistic for this simulated dataset. 
-    - After running this 
-    - We will then compare the observed difference to this null distribution to calculate a *p-value*. If the observed difference falls outside the 95% confidence interval of the null distribution, we will reject the null hypothesis, indicating a significant effect of habitat type on species diversity.
+    1. We will compute the observed difference in pollinator species diversity between grassland and forest habitats.
+    2. First, we will shuffle the labels (Mixed Forest vs Grassland) on our original dataset, and calculate the test statistic for this simulated dataset, which relates to the proportion of species diversity within each specified region. 
+    3. We will then compare the observed difference to this null distribution to calculate a p-value. If the observed difference falls outside the 95% confidence interval of the null distribution, we will reject the null hypothesis, indicating a significant effect of habitat type on species diversity.
 
 ### Step 4: Visualization and Data Analysis
 The following types of visualizations will effectively display our findings: 
@@ -120,7 +121,7 @@ By following this detailed workflow, we aim to provide a robust analysis of how 
 
 Eliza:  
 
--I Identified the additional datasets we will be using, as well as their relevant dataset  
+-I identified the additional datasets we will be using, as well as their relevant dataset  
 -I completed the first step of the literature review: “Introduce the problem and explain why” 
 
 
