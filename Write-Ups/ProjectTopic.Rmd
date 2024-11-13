@@ -1,6 +1,6 @@
 ---
 title: "Project Topic Proposed Workflow"
-author: "egb"
+authors: "Eliza Black, Emmie Sullivan"
 date: "2024-11-12"
 output: pdf_document
 ---
