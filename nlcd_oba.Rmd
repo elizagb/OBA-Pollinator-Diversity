@@ -1,0 +1,105 @@
+---
+title: "nlcd_oba"
+author: "egb"
+date: "2024-11-20"
+output: html_document
+---
+
+
+# OBA MANIPULATION
+
+```{r oba-import}
+
+# Import OBA data:
+library(dplyr)
+oba <-
+  read.csv("data/OBA_2018-2023_combined_dataset_working.csv")
+
+```
+
+```{r}
+# Segment OBA data: 
+
+# - Metadata we need:
+#   - `Species`: The taxonomic identification of each bee (group of closely related species)
+#   - `Genus`: The taxonomic identification of each bee (specific type within Genus)
+#   - `Elevation`: The elevation (in meters) at which each bee was collected.
+#   - `Coordinates`: Latitude (`Dec.Lat.`) and longitude (`Dec.Long.`) in decimal degrees.
+
+
+# Subset oba data to our needed metadata
+oba <- select(oba, Genus, Species, Dec..Lat., Dec..Long., Elevation..m.)
+colnames(oba) <- c("Genus", "Spec", "Lat", "Long", "Elev")
+
+head(oba)
+
+```
+```{r}
+# Clean OBA data
+
+# Remove rows with null values 
+```
+
+
+
+```{r}
+# Combine genus & species 
+GenusSpecies <- paste(oba$Genus, oba$Species, sep=" ")
+
+oba <- oba %>%
+  mutate(GenusSpecies)
+
+colnames(oba)
+# unique(oba$Elevation..m.)
+
+```
+
+
+# NLCD MANIPULATION 
+
+```{r nlcd-import, include=FALSE}
+
+library(terra)
+library(ggplot2)
+library(dplyr)
+library(sf)
+
+# Observe the dataset metadata here: https://www.arcgis.com/sharing/rest/content/items/9bbaa64718774bbfbf5c6ade0edf86d3/info/metadata/metadata.xml?format=default&output=html 
+
+
+# Load landcover data as raster 
+nlcd <- rast("data/NLCD_2016_Land_Cover_OR/NLCD_2016_Land_Cover_OR.img")
+
+# Aggregate the resolution so it loads faster 
+# 'fact' defines the aggregation factor (e.g., 2 means 2x2 cells are combined into 1)
+nlcd <-aggregate(nlcd, fact = 20, fun = "median")
+
+# Check resolution
+res(nlcd)
+
+# Filter for specific classes
+# Credit to figure out how to subset the large nlcd dataset: ChatGPT
+nlcd_df <- classify(nlcd, rcl = matrix(c(-Inf, 42, NA,
+43, 43, 43, 44, 70, NA,
+71, 71, 71, 72, Inf, NA),
+ncol=3, byrow=TRUE))
+
+# Reproject crs to maintain consistency between datasets 
+nlcd <- project(nlcd, crs("EPSG:4326"))
+
+# Convert raster to data frame for plotting 
+nlcd_df <- as.data.frame(nlcd, na.rm = TRUE, xy = TRUE)
+
+# Add land cover type labels
+nlcd_df <-nlcd_df %>%
+  mutate(LandType = case_when(
+    Layer_1 == 43.0 ~ "Mixed Forest",
+    Layer_1 == 71.0 ~ "Grassland"
+  )) %>%
+  filter(!is.na(LandType))
+
+# Observe dataframe columns 
+head(nlcd_df)
+
+```
+

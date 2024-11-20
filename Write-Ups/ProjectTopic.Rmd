@@ -27,7 +27,8 @@ We will utilize two primary datasets to address our research question on how mix
 - **Data Source**: Oregon Bee Atlas (OBA)  
 - **Description**: The OBA dataset is compiled by citizen scientists and professional entomologists throughout Oregon. The dataset includes extensive records on bee species, along with geographic and environmental metaadata.
 - **Metadata**:
-  - `Species`: The taxonomic identification of each bee recorded.
+  - `Species`: The taxonomic identification of each bee (group of closely related species)
+  - `Genus`: The taxonomic identification of each bee (specific type within Genus)
   - `Elevation`: The elevation (in meters) at which each bee was collected.
   - `Coordinates`: Latitude (`Dec.Lat.`) and longitude (`Dec.Long.`) in decimal degrees.
   
