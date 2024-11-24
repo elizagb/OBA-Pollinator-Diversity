@@ -2,7 +2,9 @@
 title: "nlcd_oba"
 author: "egb"
 date: "2024-11-20"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 ```{r load-libraries, echo=FALSE, results="hide", message=FALSE, warning=FALSE}
 library(terra)
@@ -12,7 +14,7 @@ library(sf)
 ```
 
 
-# OBA MANIPULATION
+# 1. OBA Manipulation
 
 ```{r oba-import}
 
@@ -75,7 +77,7 @@ head(oba, 10)
 ```
 
 
-# NLCD MANIPULATION 
+# 2. NLCD Manipulation
 
 ```{r nlcd-import, include=FALSE}
 
@@ -123,3 +125,19 @@ head(nlcd_df)
 
 ```
 
+
+# 3. Spational Integration
+## Perform a spatial overlay to assign land cover types from NLCD to OBA points.
+
+```{r}
+# Spatial Integration
+```
+
+
+# 4. Elevational Band Categorization
+## Define elevation bands using quantiles (Low, Middle, High).
+## Assign OBA observations to corresponding elevation bands.
+
+
+# 5. Statistical Analysis
+## A/B testing framework to compare pollinator diversity between Mixed Forest and Grassland across elevation bands.
