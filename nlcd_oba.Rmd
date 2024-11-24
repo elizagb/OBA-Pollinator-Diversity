@@ -4,6 +4,12 @@ author: "egb"
 date: "2024-11-20"
 output: html_document
 ---
+```{r load-libraries, echo=FALSE, results="hide", message=FALSE, warning=FALSE}
+library(terra)
+library(ggplot2)
+library(dplyr)
+library(sf)
+```
 
 
 # OBA MANIPULATION
@@ -11,7 +17,7 @@ output: html_document
 ```{r oba-import}
 
 # Import OBA data:
-library(dplyr)
+
 oba <-
   read.csv("data/OBA_2018-2023_combined_dataset_working.csv")
 
@@ -61,11 +67,9 @@ colnames(oba)
 
 library(terra)
 library(ggplot2)
-library(dplyr)
-library(sf)
+
 
 # Observe the dataset metadata here: https://www.arcgis.com/sharing/rest/content/items/9bbaa64718774bbfbf5c6ade0edf86d3/info/metadata/metadata.xml?format=default&output=html 
-
 
 # Load landcover data as raster 
 nlcd <- rast("data/NLCD_2016_Land_Cover_OR/NLCD_2016_Land_Cover_OR.img")
@@ -76,6 +80,8 @@ nlcd <-aggregate(nlcd, fact = 20, fun = "median")
 
 # Check resolution
 res(nlcd)
+
+nlcd_vector <- as.polygons(nlcd, round=TRUE, aggregate=TRUE, extent=TRUE, na.rm=TRUE, digits= 2, crs=crs("EPSG:4326"))
 
 # Filter for specific classes
 # Credit to figure out how to subset the large nlcd dataset: ChatGPT
