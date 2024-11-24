@@ -95,8 +95,31 @@ nlcd <-aggregate(nlcd, fact = 20, fun = "median")
 # Check resolution
 res(nlcd)
 
-nlcd_vector <- as.polygons(nlcd, round=TRUE, aggregate=TRUE, extent=TRUE, na.rm=TRUE, digits= 2, crs=crs("EPSG:4326"))
 
+
+#convert the rast to a SpatVector
+nlcd_poly = as.polygons(nlcd) |> 
+  st_as_sf()
+
+# --- Convert NLCD Raster to Polygons ---
+# nlcd_polygons <- as.polygons(nlcd, dissolve = TRUE)
+
+
+
+
+nlcd_filtered <- nlcd_poly
+nlcd_filtered$LandType <- ifelse(nlcd_filtered$Layer == 43, "Mixed Forest",
+                          ifelse(nlcd_filtered$Layer == 71, "Grassland", NA))
+
+# Remove polygons that are not of interest
+nlcd_filtered <- nlcd_filtered[!is.na(nlcd_filtered$LandType), ]
+
+
+# Reproject crs to maintain consistency between datasets 
+nlcd_filtered <- project(nlcd_filtered, crs("EPSG:4326"))
+
+
+nlcd_df <- as.data.frame(nlcd_filtered, )
 # Filter for specific classes
 # Credit to figure out how to subset the large nlcd dataset: ChatGPT
 nlcd_df <- classify(nlcd, rcl = matrix(c(-Inf, 42, NA,
