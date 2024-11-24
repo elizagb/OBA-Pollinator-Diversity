@@ -37,27 +37,41 @@ oba <-
 oba <- select(oba, Genus, Species, Dec..Lat., Dec..Long., Elevation..m.)
 colnames(oba) <- c("Genus", "Spec", "Lat", "Long", "Elev")
 
-head(oba)
+# head(oba, 60)
+
+# row count before cleaning: 195788
+# nrow(oba)
 
 ```
+
+
 ```{r}
 # Clean OBA data
 
-# Remove rows with null values 
+# Remove elevation rows with null values 
+
+for (col in colnames(oba)) {
+  oba <- oba[oba[[col]] != "", ]
+  oba <- oba[!is.na(oba[[col]]), ]
+}
+# Number of rows after cleaning: 41643
+nrow(oba)
+
+head(oba, 10)
 ```
 
 
 
 ```{r}
 # Combine genus & species 
-GenusSpecies <- paste(oba$Genus, oba$Species, sep=" ")
+GenusSpec <- paste(oba$Genus, oba$Spec, sep=" ")
 
 oba <- oba %>%
-  mutate(GenusSpecies)
+  mutate(GenusSpec)
 
 colnames(oba)
-# unique(oba$Elevation..m.)
 
+head(oba, 10)
 ```
 
 
