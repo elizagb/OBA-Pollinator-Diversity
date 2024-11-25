@@ -94,36 +94,33 @@ nlcd <- rast("data/NLCD_2016_Land_Cover_OR/NLCD_2016_Land_Cover_OR.img")
 # 'fact' defines the aggregation factor (e.g., 2 means 2x2 cells are combined into 1)
 nlcd <-aggregate(nlcd, fact = 20, fun = "median")
 
-# Check resolution
-res(nlcd)
+```
 
-nlcd_vector <- as.polygons(nlcd, round=TRUE, aggregate=TRUE, extent=TRUE, na.rm=TRUE, digits= 2, crs=crs("EPSG:4326"))
+```{r}
+# Reproject to match OBA dataset CRS
+nlcd <- project(nlcd, "EPSG:4326")
 
-# Filter for specific classes
-# Credit to figure out how to subset the large nlcd dataset: ChatGPT
-nlcd_df <- classify(nlcd, rcl = matrix(c(-Inf, 42, NA,
-43, 43, 43, 44, 70, NA,
-71, 71, 71, 72, Inf, NA),
-ncol=3, byrow=TRUE))
+# Classify and filter for specific land cover types
+classification_matrix <- matrix(c(
+  -Inf, 42, NA,   # Remove values < 43
+  43, 43, 43,     # Mixed Forest
+  44, 70, NA,     # Remove irrelevant values
+  71, 71, 71,     # Grassland
+  72, Inf, NA     # Remove values > 71
+), ncol = 3, byrow = TRUE)
 
-# Reproject crs to maintain consistency between datasets 
-nlcd <- project(nlcd, crs("EPSG:4326"))
+nlcd <- classify(nlcd, rcl = classification_matrix)
 
-# Convert raster to data frame for plotting 
-nlcd_df <- as.data.frame(nlcd, na.rm = TRUE, xy = TRUE)
-
-# Add land cover type labels
-nlcd_df <-nlcd_df %>%
+# Convert raster to data frame for plotting and add labels
+nlcd_df <- as.data.frame(nlcd, xy = TRUE, na.rm = TRUE) %>%
+  rename(LandType = Layer_1) %>%
   mutate(LandType = case_when(
-    Layer_1 == 43.0 ~ "Mixed Forest",
-    Layer_1 == 71.0 ~ "Grassland"
-  )) %>%
-  filter(!is.na(LandType))
-
-# Observe dataframe columns 
-head(nlcd_df)
+    LandType == 43 ~ "Mixed Forest",
+    LandType == 71 ~ "Grassland"
+  ))
 
 ```
+
 
 
 # 3. Spational Integration
@@ -131,6 +128,25 @@ head(nlcd_df)
 
 ```{r}
 # Spatial Integration
+
+# Convert OBA data to spatial points
+oba_sf <- st_as_sf(oba, coords = c("Long", "Lat"), crs = 4326)
+
+# Extract land cover values at OBA point locations
+oba_landcover <- terra::extract(nlcd, vect(oba_sf), bind = TRUE)
+
+# Add extracted land cover types to OBA dataset
+oba <- cbind(oba, LandType = oba_landcover$Layer_1) %>%
+  mutate(LandType = case_when(
+    LandType == 43 ~ "Mixed Forest",
+    LandType == 71 ~ "Grassland",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(LandType))  # Keep only relevant land cover types
+
+head(oba, 100)
+
+
 ```
 
 
