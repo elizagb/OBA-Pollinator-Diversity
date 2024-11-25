@@ -60,6 +60,10 @@ for (col in colnames(oba)) {
 nrow(oba)
 
 head(oba, 10)
+
+# Converting Elevation values to numeric 
+oba$Elev <- as.numeric(oba$Elev)
+
 ```
 
 
@@ -140,11 +144,12 @@ oba <- cbind(oba, LandType = oba_landcover$Layer_1) %>%
   mutate(LandType = case_when(
     LandType == 43 ~ "Mixed Forest",
     LandType == 71 ~ "Grassland",
-    TRUE ~ NA_character_
+    TRUE ~ NA_character_  # Default to NA if no condition is met
   )) %>%
   filter(!is.na(LandType))  # Keep only relevant land cover types
 
 head(oba, 100)
+nrow(oba)
 
 
 ```
@@ -153,6 +158,71 @@ head(oba, 100)
 # 4. Elevational Band Categorization
 ## Define elevation bands using quantiles (Low, Middle, High).
 ## Assign OBA observations to corresponding elevation bands.
+
+```{r}
+# # Define elevation quantiles and assign bands
+# # Dividing the data into quantiles
+# quantiles <- quantile(oba$Elev, probs = c(0.33, 0.66), na.rm = TRUE)
+# 
+# oba <- oba %>%
+#   mutate(ElevBand = case_when(
+#     Elev <= quantiles[1] ~ "Low",
+#     Elev <= quantiles[2] ~ "Middle",
+#     TRUE ~ "High" # Default is no previous condition is met 
+#   ))
+# 
+# # Visualize elevation distribution
+# ggplot(oba, aes(x = Elev, fill = ElevBand)) +
+#   geom_histogram(binwidth = 50) +
+#   theme_minimal() +
+#   labs(title = "Elevation Bands", x = "Elevation (m)", y = "Count")
+
+# Calculate Q1, Q2 (mean), and Q3
+elev_stats <- quantile(oba$Elev, probs = c(0.25, 0.5, 0.75), na.rm = TRUE)
+q1 <- elev_stats[1]
+q2 <- elev_stats[2]
+q3 <- elev_stats[3]
+
+elev_stats
+
+oba <- oba %>%
+  mutate(
+    ElevBand = case_when(
+      Elev >= (q1 - 50) & Elev <= (q1 + 50) ~ "Low",
+      Elev >= (q2 - 50) & Elev <= (q2 + 50) ~ "Middle",
+      Elev >= (q3 - 50) & Elev <= (q3 + 50) ~ "High",
+      TRUE ~ NA_character_
+    )
+  )
+
+head(oba, 100)
+
+sum(oba$ElevBand == "Low", na.rm = TRUE)
+# sum(oba$ElevBand == "Low" & oba$LandType == "Grassland", na.rm = TRUE)
+
+```
+```{r}
+
+nrow(oba)
+
+low_band_data <- oba %>%
+  filter(ElevBand == "Low")
+
+library(ggplot2)
+
+ggplot(oba, aes(x = Long, y = Lat, color = LandType)) +
+  geom_point(size = 2, alpha = 0.8) +
+  scale_color_manual(values = c("Mixed Forest" = "forestgreen", "Grassland" = "gold")) +
+  theme_minimal() +
+  labs(
+    title = "Bee Observations in the Lower Elevational Band",
+    x = "Longitude",
+    y = "Latitude",
+    color = "Land Type"
+  )
+
+```
+
 
 
 # 5. Statistical Analysis
