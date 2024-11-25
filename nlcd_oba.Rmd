@@ -75,7 +75,9 @@ colnames(oba)
 
 head(oba, 10)
 ```
-
+waterways, construction/human, conifer, deciduous
+diversity of pixel: 
+rosenswig
 
 # 2. NLCD Manipulation
 
@@ -90,6 +92,10 @@ library(ggplot2)
 # Load landcover data as raster 
 nlcd <- rast("data/NLCD_2016_Land_Cover_OR/NLCD_2016_Land_Cover_OR.img")
 
+str(nlcd)
+summary(nlcd)
+res(nlcd)
+crs(nlcd, proj=TRUE)
 # Aggregate the resolution so it loads faster 
 # 'fact' defines the aggregation factor (e.g., 2 means 2x2 cells are combined into 1)
 nlcd <-aggregate(nlcd, fact = 20, fun = "median")
@@ -97,7 +103,22 @@ nlcd <-aggregate(nlcd, fact = 20, fun = "median")
 # Check resolution
 res(nlcd)
 
-nlcd_vector <- as.polygons(nlcd, round=TRUE, aggregate=TRUE, extent=TRUE, na.rm=TRUE, digits= 2, crs=crs("EPSG:4326"))
+nlcd_vector <- as.polygons(nlcd) 
+
+plot(nlcd_vector)
+
+
+
+# # Reclassification directly with mapValues
+# reclass_values <- c(42, 43, 44, 71, 72)  # old classes
+# new_values <- c(NA, 43, NA, 71, NA)      # corresponding new values
+# 
+# # Reclassify the vector
+# nlcd_vector_classified <- mapValues(nlcd_vector, from = reclass_values, to = new_values, field = "land_cover_class")
+# 
+# # Check the result
+# plot(nlcd_vector_classified, "land_cover_class")
+
 
 # Filter for specific classes
 # Credit to figure out how to subset the large nlcd dataset: ChatGPT
