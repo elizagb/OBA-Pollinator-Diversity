@@ -14,6 +14,28 @@ library(sf)
 ```
 
 
+NOTES from conversation with Lauren:  
+
+- diversity of habitat types  
+- don't subset to the two categories  
+
+- calculate diversity at 100, 500, 1000 meters (changing buffer size) 
+- a Buffer around every single bee (hypothetical place every bee would forage in) 
+- find the pixel diversity in each of those buffers (to see if habitat heterogeneity improves bee diversity) 
+
+- different generae associated with different habitat  
+
+- in each buffer: number of species / number of observations (richness/diversity) 
+      - richness factoring in variability in data collection 
+      - relative richness to the number of observations  
+      
+- Split up the whole state / every bee observation into three elevational segments/bands  
+- Look and bin some of the landcover data  
+- Abundance-weight the pixels (shannon's, matrixes of diversity) 
+- Use extract to create buffers  
+- Don't do the label shuffling; use R lm() function  
+- diversity begets diversity ecology (DBD) theory : paper that supports our research 
+
 # 1. OBA Manipulation
 
 ```{r oba-import}
@@ -80,49 +102,47 @@ head(oba, 10)
 # 2. NLCD Manipulation
 
 ```{r nlcd-import, include=FALSE}
-
-library(terra)
-library(ggplot2)
-
+library(raster)
 
 # Observe the dataset metadata here: https://www.arcgis.com/sharing/rest/content/items/9bbaa64718774bbfbf5c6ade0edf86d3/info/metadata/metadata.xml?format=default&output=html 
 
 # Load landcover data as raster 
 nlcd <- rast("data/NLCD_2016_Land_Cover_OR/NLCD_2016_Land_Cover_OR.img")
 
-# Aggregate the resolution so it loads faster 
-# 'fact' defines the aggregation factor (e.g., 2 means 2x2 cells are combined into 1)
-nlcd <-aggregate(nlcd, fact = 20, fun = "median")
 
-# Check resolution
-res(nlcd)
+# LOWER RESOLUTION AND CREATE DF:
+# Check original resolution
+# Original: 98.4252 98.4252 
+original_res <- res(nlcd)
+# cat("Original resolution:", original_res, "\n")
 
-nlcd_vector <- as.polygons(nlcd, round=TRUE, aggregate=TRUE, extent=TRUE, na.rm=TRUE, digits= 2, crs=crs("EPSG:4326"))
+# Create a new template raster with the desired resolution
+# The larger the resolution, the easier to load (make this smaller for final run)
+target_res <- 500  # Desired resolution in map units (e.g., meters)
+extent_nlcd <- ext(nlcd)  # Get the extent of the original raster
 
-# Filter for specific classes
-# Credit to figure out how to subset the large nlcd dataset: ChatGPT
-nlcd_df <- classify(nlcd, rcl = matrix(c(-Inf, 42, NA,
-43, 43, 43, 44, 70, NA,
-71, 71, 71, 72, Inf, NA),
-ncol=3, byrow=TRUE))
+# Create an empty raster template
+template <- rast(extent = extent_nlcd, res = target_res, crs = crs(nlcd))
 
-# Reproject crs to maintain consistency between datasets 
-nlcd <- project(nlcd, crs("EPSG:4326"))
+# Resample the original raster to match the new template
+nlcd_resampled <- resample(nlcd, template, method = "near")  # Use "bilinear" for continuous data or "near" for categorical
+
+print(nlcd_resampled)
 
 # Convert raster to data frame for plotting 
-nlcd_df <- as.data.frame(nlcd, na.rm = TRUE, xy = TRUE)
-
-# Add land cover type labels
-nlcd_df <-nlcd_df %>%
-  mutate(LandType = case_when(
-    Layer_1 == 43.0 ~ "Mixed Forest",
-    Layer_1 == 71.0 ~ "Grassland"
-  )) %>%
-  filter(!is.na(LandType))
+nlcd_df <- as.data.frame(nlcd_resampled, na.rm = TRUE, xy = TRUE)
 
 # Observe dataframe columns 
-head(nlcd_df)
+head(nlcd_df, 50)
 
+# Add land cover type labels
+# nlcd_df <-nlcd_df %>%
+#   mutate(LandType = case_when(
+#     Layer_1 == 43.0 ~ "Mixed Forest",
+#     Layer_1 == 71.0 ~ "Grassland"
+#     # Add more labels here for each land use
+#   )) %>%
+#   filter(!is.na(LandType))
 ```
 
 
