@@ -36,6 +36,20 @@ NOTES from conversation with Lauren:
 - Don't do the label shuffling; use R lm() function  
 - diversity begets diversity ecology (DBD) theory : paper that supports our research 
 
+
+# Oregon basemap
+
+```{r plot-or}
+
+or_boundary <- map_data("state", "oregon") %>%
+  st_as_sf(coords = c("long", "lat"), crs = 4326)
+
+
+```
+
+
+
+
 # 1. OBA Manipulation
 
 ```{r oba-import}
@@ -132,17 +146,50 @@ print(nlcd_resampled)
 # Convert raster to data frame for plotting 
 nlcd_df <- as.data.frame(nlcd_resampled, na.rm = TRUE, xy = TRUE)
 
+# Add land cover type labels
+nlcd_df <- nlcd_df %>%
+  mutate(LandType = case_when(
+    Layer_1 == 11 ~ "Open Water",
+    Layer_1 == 12 ~ "Perennial Ice/Snow",
+    Layer_1 == 21 ~ "Developed, Open Space",
+    Layer_1 == 22 ~ "Developed, Low Intensity",
+    Layer_1 == 23 ~ "Developed, Medium Intensity",
+    Layer_1 == 24 ~ "Developed, High Intensity",
+    Layer_1 == 31 ~ "Barren Land (Rock/Sand/Clay)",
+    Layer_1 == 41 ~ "Deciduous Forest",
+    Layer_1 == 42 ~ "Evergreen Forest",
+    Layer_1 == 43 ~ "Mixed Forest",
+    Layer_1 == 51 ~ "Dwarf Scrub",
+    Layer_1 == 52 ~ "Shrub/Scrub",
+    Layer_1 == 71 ~ "Grassland/Herbaceous",
+    Layer_1 == 72 ~ "Sedge/Herbaceous",
+    Layer_1 == 73 ~ "Lichens",
+    Layer_1 == 74 ~ "Moss",
+    Layer_1 == 81 ~ "Pasture/Hay",
+    Layer_1 == 82 ~ "Cultivated Crops",
+    Layer_1 == 90 ~ "Woody Wetlands",
+    Layer_1 == 95 ~ "Emergent Herbaceous Wetlands",
+    TRUE ~ NA_character_  # Exclude unknown values
+  )) %>%
+  filter(!is.na(LandType))  # Remove rows with NA values
+
 # Observe dataframe columns 
 head(nlcd_df, 50)
 
-# Add land cover type labels
-# nlcd_df <-nlcd_df %>%
-#   mutate(LandType = case_when(
-#     Layer_1 == 43.0 ~ "Mixed Forest",
-#     Layer_1 == 71.0 ~ "Grassland"
-#     # Add more labels here for each land use
-#   )) %>%
-#   filter(!is.na(LandType))
+library(ggplot2)
+
+# # Create a heatmap with discrete categories in 'Layer_1'
+# ggplot(nlcd_df, aes(x = x, y = y, fill = LandType)) +
+#   geom_tile() +  # Create a heatmap-like plot with tiles
+#   scale_fill_viridis_d() +  # Use a discrete color scale (viridis is suitable for categorical data)
+#   theme_minimal() +  # Clean theme
+#   labs(title = "Land Cover Data",
+#        x = "Longitude",
+#        y = "Latitude",
+#        fill = "Land Cover Type") +
+#   coord_fixed()  # Fix aspect ratio to prevent distortion
+
+
 ```
 
 
@@ -151,13 +198,80 @@ head(nlcd_df, 50)
 
 ```{r}
 # Spatial Integration
+
+
+# 1. Convert OBA bee observations to spatial points
+library(sf)
+
+# Convert OBA data to spatial points (assuming "Lat" and "Long" are in decimal degrees)
+oba_sf <- st_as_sf(oba, coords = c("Long", "Lat"), crs = 4326)
+
+# Transform to the same CRS as the NLCD raster (assuming the raster is in UTM)
+oba_sf <- st_transform(oba_sf, crs = crs(nlcd_resampled))
+
+# # 2. Plot the datasets
+# ggplot() +
+#   # Plot the land cover data (NLCD) as a raster
+#   geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
+#   
+#   # Overlay OBA bee observations as spatial points, colored by elevation
+#   geom_sf(data = oba_sf, size = 1, aes(color = "red")) +
+#   
+#   # Customize the plot appearance
+#   labs(title = "OBA Bee Observations Overlaid on NLCD Land Cover",
+#        x = "Longitude",
+#        y = "Latitude",
+#        fill = "Land Cover Type",
+#        color = "Elevation (m)") +
+#   
+#   theme_minimal() +
+#   
+#   # for spatial data handling
+#   coord_sf()
+
+```
+
+# Crop oba and nlcd to or 
+```{r}
+# Make or crs match
+or_boundary <- st_transform(or_boundary, crs = st_crs(oba_sf))
+
+# Clip OBA data to Oregon boundary
+# oba_clipped <- st_intersection(oba_sf, or_boundary)
+oba_cropped <- st_crop(oba_sf, or_boundary)
+
+# Check the result
+# summary(oba_cropped)
+```
+```{r}
+
+# Test: plotting land cover and oba data over oregon border to ensure that oba data cropped to or border
+
+# Plot using geom_sf for the Oregon boundary
+ggplot() +
+  # Plot the Oregon boundary
+  geom_sf(data = or_boundary, fill = NA, color = "black") +
+  
+  # Plot the raster data (NLCD)
+  geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
+  
+  # Plot the cropped OBA data (inside Oregon boundary)
+  geom_sf(data = oba_cropped, aes(color = "red"), size = 1) +
+  
+  # Customize the plot appearance
+  labs(title = "Cropped OBA Data, Oregon Boundary, and NLCD",
+       x = "Longitude",
+       y = "Latitude",
+       color = "OBA Observations") +
+  theme_minimal() +
+  theme(legend.position = "none")  # Hide legend for color
+
+
 ```
 
 
 # 4. Elevational Band Categorization
-## Define elevation bands using quantiles (Low, Middle, High).
+## Define elevation bands (Low, Middle, High).
 ## Assign OBA observations to corresponding elevation bands.
 
 
-# 5. Statistical Analysis
-## A/B testing framework to compare pollinator diversity between Mixed Forest and Grassland across elevation bands.
