@@ -41,21 +41,8 @@ NOTES from conversation with Lauren:
 
 ```{r plot-or}
 
-# or_boundary <- map_data("state", "oregon") %>%
-#   st_as_sf(coords = c("long", "lat"), crs = 4326)
-# 
-# map_state <- map_data("state")
-# or_boundary <- map_state %>%
-#     filter(region %in% "oregon")
-
-# Ensure both OBA data and Oregon boundary share the same CRS
-# or_boundary <- map_state %>%
-#   filter(region %in% "oregon") %>%
-#   st_as_sf(coords = c("long", "lat"), crs = 4326) %>%
-#   st_transform(crs = st_crs(oba_sf))  # Transform Oregon boundary to same CRS as OBA
-
 or_boundary <- read_sf(dsn = "data/Oregon_State_Boundary_-2975945127261102476/Oregon_State_Boundary.shp")
-str(or_boundary)
+# str(or_boundary)
 
 ```
 
@@ -108,9 +95,8 @@ for (col in colnames(oba)) {
   oba <- oba[!is.na(oba[[col]]), ]
 }
 # Number of rows after cleaning: 41643
-nrow(oba)
-
-head(oba, 10)
+# nrow(oba)
+# head(oba, 10)
 ```
 
 
@@ -122,9 +108,8 @@ GenusSpec <- paste(oba$Genus, oba$Spec, sep=" ")
 oba <- oba %>%
   mutate(GenusSpec)
 
-colnames(oba)
-
-head(oba, 10)
+# colnames(oba)
+#nhead(oba, 10)
 ```
 
 
@@ -191,7 +176,6 @@ nlcd_df <- nlcd_df %>%
 # Observe dataframe columns 
 head(nlcd_df, 50)
 
-library(ggplot2)
 
 # Create a heatmap with discrete categories in 'Layer_1'
 ggplot(nlcd_df, aes(x = x, y = y, fill = LandType)) +
@@ -203,7 +187,6 @@ ggplot(nlcd_df, aes(x = x, y = y, fill = LandType)) +
        y = "Latitude",
        fill = "Land Cover Type") +
   coord_fixed()  # Fix aspect ratio to prevent distortion
-
 
 ```
 
@@ -277,10 +260,10 @@ ggplot() +
   geom_sf(data = or_boundary, fill = NA, color = "black") +
 
   # Plot the raster data (NLCD)
-  # geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
+  geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
   
   # Plot the cropped OBA data (inside Oregon boundary)
-  geom_sf(data = oba_sf, aes(color = "black"), size = .5) +
+  geom_sf(data = oba_sf, aes(fill = "black"), size = .5) +
   
   # Customize the plot appearance
   labs(title = "Cropped OBA Data, Oregon Boundary, and NLCD",
@@ -334,14 +317,20 @@ buffers_1000m <- st_buffer(oba_sf, dist = 1000)
 ```
 
 # Extract insights (Shannon's Diversity Matrix)
-# (Not sure if I'm doing this right)
+# Checked w/ Lauren: this all looks correct! 
 ```{r}
+# - calculate diversity at 100, 500, 1000 meters (changing buffer size) 
+# - a Buffer around every single bee
+# - find the pixel diversity in each of those buffers (to see if habitat heterogeneity improves bee diversity) 
+    # Abundance-weight the pixels
+
+
 # Ensure both the raster and buffers share the same CRS
 if (st_crs(buffers_100m) != crs(nlcd_resampled)) {
   buffers_100m <- st_transform(buffers_100m, crs(nlcd_resampled))  # Reproject buffers to match raster CRS
 }
 
-# Define a function to calculate Shannon diversity and create the diversity matrix
+# Function to calculate Shannon diversity and create the diversity matrix
 calculate_diversity <- function(buffers, raster) {
   # Extract values from the NLCD raster within the buffer
   extracted_data <- terra::extract(raster, buffers)
@@ -356,11 +345,12 @@ calculate_diversity <- function(buffers, raster) {
   
   # Compute Shannon diversity for each buffer
   shannon_div <- apply(diversity_matrix[-1], 1, function(row) {
+    row <- row[names(row) != "NA"]
     prop <- row / sum(row)
     -sum(prop * log(prop), na.rm = TRUE)
   })
   
-  # Add diversity metrics to buffers
+  # Add diversity metrics/shannon to buffers as col 
   buffers <- buffers %>%
     mutate(shannon_div = shannon_div)
   
@@ -374,17 +364,15 @@ buffers_500m <- calculate_diversity(buffers_500m, nlcd_resampled)
 buffers_1000m <- calculate_diversity(buffers_1000m, nlcd_resampled)
 
 
-# As example: Plot 100m buffers colored by their Shannon diversity index
+# As example: Plot 1000m buffers colored by their Shannon diversity index
 ggplot() +
   geom_sf(data = or_boundary, fill = NA, color = "black") +  # OR boundary
-  geom_sf(data = buffers_100m, aes(fill = shannon_div), color = NA) +
+  geom_sf(data = buffers_1000m, aes(fill = shannon_div), color = NA) +
   scale_fill_viridis_c() +
   labs(title = "Shannon Diversity of NLCD Land Cover in 100m Buffers")
 ```
 
-
-
-# 4. Elevational Band Categorization
+# Elevational Band Categorization
 ## Define elevation bands (Low, Middle, High).
 ## Assign OBA observations to corresponding elevation bands.
 
