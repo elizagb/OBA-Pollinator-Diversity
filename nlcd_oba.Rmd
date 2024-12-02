@@ -90,9 +90,6 @@ colnames(oba) <- c("Genus", "Spec", "Lat", "Long", "Elev")
 # row count before cleaning: 195788
 # nrow(oba)
 
-# Make elevation values numeric 
-oba$Elev <- as.numeric(oba$Elev)
-
 ```
 
 
@@ -384,16 +381,5 @@ ggplot() +
 ## Define elevation bands (Low, Middle, High).
 ## Assign OBA observations to corresponding elevation bands.
 
-```{r}
-# Divide data into elevational bands
-elevation_bands <- cut(oba$Elev, breaks = c(0, 500, 1000, 1500, Inf), 
-                       labels = c("Low", "Medium", "High", "Very High"))
-
-# Add to spatial data
-oba_sf <- oba_sf %>%
-  mutate(ElevationBand = elevation_bands)
-
-head(oba_sf)
-```
 
 
