@@ -49,11 +49,13 @@ NOTES from conversation with Lauren:
 #     filter(region %in% "oregon")
 
 # Ensure both OBA data and Oregon boundary share the same CRS
-or_boundary <- map_state %>%
-  filter(region %in% "oregon") %>%
-  st_as_sf(coords = c("long", "lat"), crs = 4326) %>%
-  st_transform(crs = st_crs(oba_sf))  # Transform Oregon boundary to same CRS as OBA
+# or_boundary <- map_state %>%
+#   filter(region %in% "oregon") %>%
+#   st_as_sf(coords = c("long", "lat"), crs = 4326) %>%
+#   st_transform(crs = st_crs(oba_sf))  # Transform Oregon boundary to same CRS as OBA
 
+or_boundary <- read_sf(dsn = "data/Oregon_State_Boundary_-2975945127261102476/Oregon_State_Boundary.shp")
+str(or_boundary)
 
 ```
 
@@ -245,38 +247,40 @@ oba_sf <- st_transform(oba_sf, crs = crs(nlcd_resampled))
 ```{r}
 # Make or crs match
 # or_boundary <- st_transform(or_boundary, crs = st_crs(oba_sf))
-str(or_boundary)
-or_boundary_sf <- st_as_sf(or_boundary, coords = c("lon", "lat"), crs = crs(oba_sf))
+# str(or_boundary)
 
 # ISSUE: creates a set of points, not a continuous border 
 # st_geometry_type(or_boundary_sf)
 
 # Clip OBA data to Oregon boundary
 # oba_cropped_sf <- st_crop(oba_sf, or_boundary_sf)
-oba_cropped_sf <- st_crop(oba_sf, or_boundary)
+oba_sf <- st_crop(oba_sf, or_boundary)
+str(oba_sf)
 
 # Check the result
-summary(oba_cropped_sf)
+summary(oba_sf)
 
 # Check the result
 # summary(oba_cropped)
 ```
 ```{r}
-# ISSUE: or boundary is made up of points, not line 
+
+or_boundary <- st_as_sf(or_boundary, coords = c("lon", "lat"), crs = crs(oba_sf))
 
 # Test: plotting land cover and oba data over oregon border to ensure that oba data cropped to or border
-
 # Plot using geom_sf for the Oregon boundary
 ggplot() +
   # Plot the Oregon boundary
   
-  geom_sf(data = or_boundary, fill = NA, color = "black") +  # OR boundary
+  # geom_sf(data = or_boundary, x = lat, y = lon, fill = NA, color = "black") +  # OR boundary
+  # geom_polygon(data = or_boundary, aes(x = lon, y = lat, group = group), fill = NA, color = "black")
+  geom_sf(data = or_boundary, fill = NA, color = "black") +
 
   # Plot the raster data (NLCD)
-  geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
+  # geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
   
   # Plot the cropped OBA data (inside Oregon boundary)
-  geom_sf(data = oba_cropped_sf, aes(color = "black"), size = 1) +
+  geom_sf(data = oba_sf, aes(color = "black"), size = .5) +
   
   # Customize the plot appearance
   labs(title = "Cropped OBA Data, Oregon Boundary, and NLCD",
@@ -292,14 +296,14 @@ ggplot() +
 ```{r oba-buffers}
 
 # Change to crs that uses meters, not feet 
-oba_cropped_sf <- st_transform(oba_cropped_sf, crs = 32610)
+oba_sf <- st_transform(oba_sf, crs = 32610)
 # crs(oba_cropped_sf)
 
 
 # Generate buffers for each buffer size (in meters)
-buffers_100m <- st_buffer(oba_cropped_sf, dist = 100)
-buffers_500m <- st_buffer(oba_cropped_sf, dist = 500)
-buffers_1000m <- st_buffer(oba_cropped_sf, dist = 1000)
+buffers_100m <- st_buffer(oba_sf, dist = 100)
+buffers_500m <- st_buffer(oba_sf, dist = 500)
+buffers_1000m <- st_buffer(oba_sf, dist = 1000)
 
 # # Plot buffers around the bee observations
 # ggplot() +
