@@ -11,8 +11,8 @@ library(terra)
 library(ggplot2)
 library(dplyr)
 library(sf)
+library(tidyr)
 ```
-
 
 NOTES from conversation with Lauren:  
 
@@ -41,8 +41,18 @@ NOTES from conversation with Lauren:
 
 ```{r plot-or}
 
-or_boundary <- map_data("state", "oregon") %>%
-  st_as_sf(coords = c("long", "lat"), crs = 4326)
+# or_boundary <- map_data("state", "oregon") %>%
+#   st_as_sf(coords = c("long", "lat"), crs = 4326)
+# 
+# map_state <- map_data("state")
+# or_boundary <- map_state %>%
+#     filter(region %in% "oregon")
+
+# Ensure both OBA data and Oregon boundary share the same CRS
+or_boundary <- map_state %>%
+  filter(region %in% "oregon") %>%
+  st_as_sf(coords = c("long", "lat"), crs = 4326) %>%
+  st_transform(crs = st_crs(oba_sf))  # Transform Oregon boundary to same CRS as OBA
 
 
 ```
@@ -72,7 +82,7 @@ oba <-
 
 
 # Subset oba data to our needed metadata
-oba <- select(oba, Genus, Species, Dec..Lat., Dec..Long., Elevation..m.)
+oba <- dplyr::select(oba, Genus, Species, Dec..Lat., Dec..Long., Elevation..m.)
 colnames(oba) <- c("Genus", "Spec", "Lat", "Long", "Elev")
 
 # head(oba, 60)
@@ -178,16 +188,16 @@ head(nlcd_df, 50)
 
 library(ggplot2)
 
-# # Create a heatmap with discrete categories in 'Layer_1'
-# ggplot(nlcd_df, aes(x = x, y = y, fill = LandType)) +
-#   geom_tile() +  # Create a heatmap-like plot with tiles
-#   scale_fill_viridis_d() +  # Use a discrete color scale (viridis is suitable for categorical data)
-#   theme_minimal() +  # Clean theme
-#   labs(title = "Land Cover Data",
-#        x = "Longitude",
-#        y = "Latitude",
-#        fill = "Land Cover Type") +
-#   coord_fixed()  # Fix aspect ratio to prevent distortion
+# Create a heatmap with discrete categories in 'Layer_1'
+ggplot(nlcd_df, aes(x = x, y = y, fill = LandType)) +
+  geom_tile() +  # Create a heatmap-like plot with tiles
+  scale_fill_viridis_d() +  # Use a discrete color scale (viridis is suitable for categorical data)
+  theme_minimal() +  # Clean theme
+  labs(title = "Land Cover Data",
+       x = "Longitude",
+       y = "Latitude",
+       fill = "Land Cover Type") +
+  coord_fixed()  # Fix aspect ratio to prevent distortion
 
 
 ```
@@ -198,10 +208,7 @@ library(ggplot2)
 
 ```{r}
 # Spatial Integration
-
-
-# 1. Convert OBA bee observations to spatial points
-library(sf)
+# Convert OBA bee observations to spatial points
 
 # Convert OBA data to spatial points (assuming "Lat" and "Long" are in decimal degrees)
 oba_sf <- st_as_sf(oba, coords = c("Long", "Lat"), crs = 4326)
@@ -234,44 +241,145 @@ oba_sf <- st_transform(oba_sf, crs = crs(nlcd_resampled))
 # Crop oba and nlcd to or 
 ```{r}
 # Make or crs match
-or_boundary <- st_transform(or_boundary, crs = st_crs(oba_sf))
+# or_boundary <- st_transform(or_boundary, crs = st_crs(oba_sf))
+str(or_boundary)
+or_boundary_sf <- st_as_sf(or_boundary, coords = c("lon", "lat"), crs = crs(oba_sf))
+
+# ISSUE: creates a set of points, not a continuous border 
+# st_geometry_type(or_boundary_sf)
 
 # Clip OBA data to Oregon boundary
-# oba_clipped <- st_intersection(oba_sf, or_boundary)
-oba_cropped <- st_crop(oba_sf, or_boundary)
+# oba_cropped_sf <- st_crop(oba_sf, or_boundary_sf)
+oba_cropped_sf <- st_crop(oba_sf, or_boundary)
+
+# Check the result
+summary(oba_cropped_sf)
 
 # Check the result
 # summary(oba_cropped)
 ```
 ```{r}
+# ISSUE: or boundary is made up of points, not line 
 
 # Test: plotting land cover and oba data over oregon border to ensure that oba data cropped to or border
 
 # Plot using geom_sf for the Oregon boundary
 ggplot() +
   # Plot the Oregon boundary
-  geom_sf(data = or_boundary, fill = NA, color = "black") +
   
+  geom_sf(data = or_boundary, fill = NA, color = "black") +  # OR boundary
+
   # Plot the raster data (NLCD)
   geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
   
   # Plot the cropped OBA data (inside Oregon boundary)
-  geom_sf(data = oba_cropped, aes(color = "red"), size = 1) +
+  geom_sf(data = oba_cropped_sf, aes(color = "black"), size = 1) +
   
   # Customize the plot appearance
   labs(title = "Cropped OBA Data, Oregon Boundary, and NLCD",
        x = "Longitude",
        y = "Latitude",
        color = "OBA Observations") +
-  theme_minimal() +
-  theme(legend.position = "none")  # Hide legend for color
+  theme_minimal() 
 
 
 ```
+
+# Creating buffers 
+```{r oba-buffers}
+
+# Change to crs that uses meters, not feet 
+oba_cropped_sf <- st_transform(oba_cropped_sf, crs = 32610)
+# crs(oba_cropped_sf)
+
+
+# Generate buffers for each buffer size (in meters)
+buffers_100m <- st_buffer(oba_cropped_sf, dist = 100)
+buffers_500m <- st_buffer(oba_cropped_sf, dist = 500)
+buffers_1000m <- st_buffer(oba_cropped_sf, dist = 1000)
+
+# # Plot buffers around the bee observations
+# ggplot() +
+#   # Plot the Oregon boundary
+#   geom_sf(data = or_boundary, fill = NA, color = "black") +
+#   
+#   # Plot the land cover data (NLCD)
+#   geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
+#   
+#   # Plot the 100m buffers around OBA data
+#   geom_sf(data = buffers_100m, fill = "blue", alpha = 0.3, color = "blue") +
+#   
+#   # Plot the 500m buffers around OBA data
+#   geom_sf(data = buffers_500m, fill = "green", alpha = 0.3, color = "green") +
+#   
+#   # Plot the 1000m buffers around OBA data
+#   geom_sf(data = buffers_1000m, fill = "red", alpha = 0.3, color = "red") +
+#   
+#   # Plot the OBA data points
+#   geom_sf(data = oba_cropped_sf, aes(color = "black"), size = 0.1) +
+#   
+#   # Customize the plot appearance
+#   labs(title = "Buffers Around OBA Bee Observations",
+#        x = "Longitude",
+#        y = "Latitude") +
+#   theme_minimal() 
+
+```
+
+# Extract insights (Shannon's Diversity Matrix)
+# (Not sure if I'm doing this right)
+```{r}
+# Ensure both the raster and buffers share the same CRS
+if (st_crs(buffers_100m) != crs(nlcd_resampled)) {
+  buffers_100m <- st_transform(buffers_100m, crs(nlcd_resampled))  # Reproject buffers to match raster CRS
+}
+
+# Define a function to calculate Shannon diversity and create the diversity matrix
+calculate_diversity <- function(buffers, raster) {
+  # Extract values from the NLCD raster within the buffer
+  extracted_data <- terra::extract(raster, buffers)
+  
+  # Create a diversity matrix
+  # Each row corresponds to a buffer (ID); each column is a land cover type (Layer_1), 
+  # with values being the count of pixels for that type in the buffer.
+  diversity_matrix <- extracted_data %>%
+    group_by(ID, Layer_1) %>%
+    summarise(count = n(), .groups = "drop") %>%
+    pivot_wider(names_from = Layer_1, values_from = count, values_fill = 0)
+  
+  # Compute Shannon diversity for each buffer
+  shannon_div <- apply(diversity_matrix[-1], 1, function(row) {
+    prop <- row / sum(row)
+    -sum(prop * log(prop), na.rm = TRUE)
+  })
+  
+  # Add diversity metrics to buffers
+  buffers <- buffers %>%
+    mutate(shannon_div = shannon_div)
+  
+  # Return updated buffers
+  return(buffers)
+}
+
+# Apply function to the different buffer sizes
+buffers_100m <- calculate_diversity(buffers_100m, nlcd_resampled)
+buffers_500m <- calculate_diversity(buffers_500m, nlcd_resampled)
+buffers_1000m <- calculate_diversity(buffers_1000m, nlcd_resampled)
+
+
+# As example: Plot 100m buffers colored by their Shannon diversity index
+ggplot() +
+  geom_sf(data = or_boundary, fill = NA, color = "black") +  # OR boundary
+  geom_sf(data = buffers_100m, aes(fill = shannon_div), color = NA) +
+  scale_fill_viridis_c() +
+  labs(title = "Shannon Diversity of NLCD Land Cover in 100m Buffers")
+```
+
 
 
 # 4. Elevational Band Categorization
 ## Define elevation bands (Low, Middle, High).
 ## Assign OBA observations to corresponding elevation bands.
+
 
 
