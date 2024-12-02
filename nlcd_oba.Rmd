@@ -121,7 +121,9 @@ colnames(oba)
 
 head(oba, 10)
 ```
-
+waterways, construction/human, conifer, deciduous
+diversity of pixel: 
+rosenswig
 
 # 2. NLCD Manipulation
 
@@ -134,16 +136,14 @@ library(raster)
 nlcd <- rast("data/NLCD_2016_Land_Cover_OR/NLCD_2016_Land_Cover_OR.img")
 
 
+
 # LOWER RESOLUTION AND CREATE DF:
 # Check original resolution
 # Original: 98.4252 98.4252 
 original_res <- res(nlcd)
 # cat("Original resolution:", original_res, "\n")
 
-# Create a new template raster with the desired resolution
-# The larger the resolution, the easier to load (make this smaller for final run)
-target_res <- 500  # Desired resolution in map units (e.g., meters)
-extent_nlcd <- ext(nlcd)  # Get the extent of the original raster
+
 
 # Create an empty raster template
 template <- rast(extent = extent_nlcd, res = target_res, crs = crs(nlcd))
