@@ -297,22 +297,24 @@ head(oba_sf)
 # Creating buffers 
 ```{r oba-buffers}
 
-# Put buffers around only bombus 
+# Idea: Put buffers around only bombus?
 # Issue: creating buffers from same data we're counting on 
 # Send Lauren Teams message about this issue
 
 # Change to crs that uses meters, not feet 
 oba_sf <- st_transform(oba_sf, crs = 32610)
 
-# crs(oba_cropped_sf)
-
-# Generate buffers for each buffer size (in meters)
-
+# Generate 500m buffers (one around each oba data point)
 buffers_500m <- st_buffer(oba_sf, dist = 500)
 
+# add buffer_id column to buffer
+buffers_500m$buffer_id <- seq_len(nrow(buffers_500m))
+
+#perform spatial join: this assigns each species point to a buffer by buffer_id
 species_in_buffers <- st_join(oba_sf, buffers_500m, join = st_within)
 
-head(species_in_buffers)
+# Test 
+# head(species_in_buffers)
 
 # Try indexing oba data by oba buffer:
 # school_robbery <- robberies_may[school_buffer,]
@@ -350,26 +352,9 @@ head(species_in_buffers)
 
 
 
-
+## Calculating and organizing species richness for each buffer 
 ```{r vegan package richness}
-
-#created the 500m buffer
-buffers_500m <- st_buffer(oba_sf, dist = 500)
-
-#ensure that oba_sf and buffer has the same CRS
-
-#add buffer_id column to buffer
-buffers_500m$buffer_id <- seq_len(nrow(buffers_500m))
-
-# buffers_500m_selected <- buffers_500m %>%
-#   select(buffer_id)  # Here you select the buffer_id column or others as needed
-
-# Now, add the geometry back
-# buffers_500m_final <- st_sf(buffers_500m_selected, geometry = buffers_500m$geometry)
-
-#perform spatial join: this assigns each species point to a buffer by buffer_id
-species_in_buffers <- st_join(oba_sf, buffers_500m, join = st_within)
-
+# CHECKPOINT: successfully join richness data with buffers 
 
 library(vegan)
 library(tibble) 
@@ -383,32 +368,32 @@ community_matrix <- species_in_buffers %>%
 
 richness <- specnumber(community_matrix)
 # richness$buffer_id <- as.integer(richness$buffer_id)  # Make buffer ids ints 
-head(richness, 100)
+head(richness)
 
-class(richness)
-```
+# Calculate total observations (sum of individuals per buffer)
+total_observations <- rowSums(community_matrix)  # Sum across species for each buffer
 
+# Calculate normalized richness (richness / total observations)
+normalized_richness <- richness / total_observations
 
-```{r}
-
-colnames(buffers_500m)
-
-# Ensure `richness` is a named vector with buffer IDs
-# Convert richness to tibble
+# Create a dataframe with buffer ID and normalized richness
 richness_df <- tibble(
-  buffer_id = as.integer(names(richness)),  # Convert names to integers (buffer IDs)
-  richness = richness                        # Keep the richness values (integer type)
+  buffer_id = as.integer(names(richness)),      # Convert names (buffer IDs) to integer
+  normalized_richness = normalized_richness     # Add the normalized richness values
 )
-# colnames(richness_df)
+
+# Check result
+head(richness_df)
 
 # Join richness data back to the buffers
-buffers_500m_join <- buffers_500m %>%
+buffers_500m <- buffers_500m %>%
   left_join(richness_df, by = "buffer_id")
 
+head(buffers_500m)
 
 # Plot buffers with richness levels
 ggplot() +
-  geom_sf(data = buffers_500m, aes(fill = richness), color = "black", size = 0.1) +
+  geom_sf(data = buffers_500m, aes(fill = normalized_richness), color = "black", size = 0.1) +
   scale_fill_viridis_c(option = "plasma", na.value = "white") +
   labs(
     title = "Species Richness in Buffers (500m)",
@@ -417,8 +402,6 @@ ggplot() +
     y = "Latitude"
   ) +
   theme_minimal()
-
-str(buffers_500m$richness)
 ```
 
 
