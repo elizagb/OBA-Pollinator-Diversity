@@ -388,6 +388,43 @@ ggplot() +
 
 ```
 
+
+
+
+```{r vegan package richness}
+
+#created the 500m buffer
+buffers_500m <- st_buffer(oba_sf, dist = 500)
+
+#ensure that oba_sf and buffer has the same CRS
+
+#add buffer_id column to buffer
+buffers_500m$buffer_id <- seq_len(nrow(buffers_500m))
+
+# buffers_500m_selected <- buffers_500m %>%
+#   select(buffer_id)  # Here you select the buffer_id column or others as needed
+
+# Now, add the geometry back
+# buffers_500m_final <- st_sf(buffers_500m_selected, geometry = buffers_500m$geometry)
+
+#perform spatial join: this assigns each species point to a buffer by buffer_id
+species_in_buffers <- st_join(oba_sf, buffers_500m, join = st_within)
+
+
+library(vegan)
+library(tibble) 
+
+community_matrix <- species_in_buffers %>%
+    st_drop_geometry() %>%                    # Drop spatial data for tabular manipulation
+    group_by(buffer_id, GenusSpec.x) %>%          # Replace `buffer_id` with your buffer identifier column
+    summarize(count = n()) %>%                # Count occurrences
+    pivot_wider(names_from = GenusSpec.x, values_from = count, values_fill = 0) %>%
+    column_to_rownames("buffer_id")           # Set buffer IDs as row names
+
+richness <- specnumber(community_matrix)
+print(richness)
+```
+
 # Extract insights (Shannon's Diversity Matrix)
 # Checked w/ Lauren: this all looks correct! 
 ```{r}
