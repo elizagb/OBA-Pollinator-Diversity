@@ -202,6 +202,7 @@ ggplot(nlcd_df, aes(x = x, y = y, fill = LandType)) +
 # Convert OBA data to spatial points (assuming "Lat" and "Long" are in decimal degrees)
 oba_sf <- st_as_sf(oba, coords = c("Long", "Lat"), crs = 4326)
 
+
 # Transform to the same CRS as the NLCD raster (assuming the raster is in UTM)
 oba_sf <- st_transform(oba_sf, crs = crs(nlcd_resampled))
 
@@ -253,25 +254,25 @@ or_boundary <- st_as_sf(or_boundary, coords = c("lon", "lat"), crs = crs(oba_sf)
 
 # Test: plotting land cover and oba data over oregon border to ensure that oba data cropped to or border
 # Plot using geom_sf for the Oregon boundary
-ggplot() +
-  # Plot the Oregon boundary
-  
-  # geom_sf(data = or_boundary, x = lat, y = lon, fill = NA, color = "black") +  # OR boundary
-  # geom_polygon(data = or_boundary, aes(x = lon, y = lat, group = group), fill = NA, color = "black")
-  geom_sf(data = or_boundary, fill = NA, color = "black") +
-
-  # Plot the raster data (NLCD)
-  geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
-  
-  # Plot the cropped OBA data (inside Oregon boundary)
-  geom_sf(data = oba_sf, aes(fill = "black"), size = .5) +
-  
-  # Customize the plot appearance
-  labs(title = "Cropped OBA Data, Oregon Boundary, and NLCD",
-       x = "Longitude",
-       y = "Latitude",
-       color = "OBA Observations") +
-  theme_minimal() 
+# ggplot() +
+#   # Plot the Oregon boundary
+#   
+#   # geom_sf(data = or_boundary, x = lat, y = lon, fill = NA, color = "black") +  # OR boundary
+#   # geom_polygon(data = or_boundary, aes(x = lon, y = lat, group = group), fill = NA, color = "black")
+#   geom_sf(data = or_boundary, fill = NA, color = "black") +
+# 
+#   # Plot the raster data (NLCD)
+#   geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
+#   
+#   # Plot the cropped OBA data (inside Oregon boundary)
+#   geom_sf(data = oba_sf, aes(fill = "black"), size = .5) +
+#   
+#   # Customize the plot appearance
+#   labs(title = "Cropped OBA Data, Oregon Boundary, and NLCD",
+#        x = "Longitude",
+#        y = "Latitude",
+#        color = "OBA Observations") +
+#   theme_minimal() 
 
 
 ```
@@ -302,62 +303,21 @@ head(oba_sf)
 
 # Change to crs that uses meters, not feet 
 oba_sf <- st_transform(oba_sf, crs = 32610)
+
 # crs(oba_cropped_sf)
 
-nrow(oba_sf)
-
 # Generate buffers for each buffer size (in meters)
-buffers_100m <- st_buffer(oba_sf, dist = 100)
-buffers_500m <- st_buffer(oba_sf, dist = 500)
 
+buffers_500m <- st_buffer(oba_sf, dist = 500)
 
 species_in_buffers <- st_join(oba_sf, buffers_500m, join = st_within)
 
-
-buffers_1000m <- st_buffer(oba_sf, dist = 1000)
-
-# Subset points that fall within each buffer
-buffers_100m_subset <- st_intersection(oba_sf, buffers_100m)
-
+head(species_in_buffers)
 
 # Try indexing oba data by oba buffer:
 # school_robbery <- robberies_may[school_buffer,]
-oba_100m <- oba_sf[buffers_100m,]
-nrow(oba_100m)
-
-oba_500m <- oba_sf[buffers_500m,]
-nrow(oba_500m)
-
-# buffers_500m <- st_intersection(oba_sf, buffers_500m)
-# buffers_1000m <- st_intersection(oba_sf, buffers_1000m)
-
-# buffers_500m_subset <- st_intersects(oba_sf, buffers_500m)
-
-buffers_500m_subset_df <- as.data.frame(buffers_500m_subset)
-
-nrow(buffers_500m_subset)
-
-# buffers_100m <- st_crop(oba_sf, buffers_500m)
-buffers_100m_subset <- st_crop(oba_sf, buffers_100m)
-
-nrow(buffers_500m)
-nrow(buffers_100m_subset)
-
-
-# Plot buffers around the bee observations
-ggplot() +
-  # Plot the Oregon boundary
-  geom_sf(data = or_boundary, fill = NA, color = "black") +
-
-  # Plot the land cover data (NLCD)
-  geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
-
-  # Plot the 100m buffers around OBA data
-  geom_sf(data = buffers_100m_subset, fill = "blue", alpha = 0.3, color = "blue") 
-
-
-
-
+# oba_500m <- oba_sf[buffers_500m,]
+# nrow(oba_500m)
 
 # 
 # # Plot buffers around the bee observations
@@ -422,8 +382,46 @@ community_matrix <- species_in_buffers %>%
     column_to_rownames("buffer_id")           # Set buffer IDs as row names
 
 richness <- specnumber(community_matrix)
-print(richness)
+# richness$buffer_id <- as.integer(richness$buffer_id)  # Make buffer ids ints 
+head(richness, 100)
+
+class(richness)
 ```
+
+
+```{r}
+
+colnames(buffers_500m)
+
+# Ensure `richness` is a named vector with buffer IDs
+# Convert richness to tibble
+richness_df <- tibble(
+  buffer_id = as.integer(names(richness)),  # Convert names to integers (buffer IDs)
+  richness = richness                        # Keep the richness values (integer type)
+)
+# colnames(richness_df)
+
+# Join richness data back to the buffers
+buffers_500m_join <- buffers_500m %>%
+  left_join(richness_df, by = "buffer_id")
+
+
+# Plot buffers with richness levels
+ggplot() +
+  geom_sf(data = buffers_500m, aes(fill = richness), color = "black", size = 0.1) +
+  scale_fill_viridis_c(option = "plasma", na.value = "white") +
+  labs(
+    title = "Species Richness in Buffers (500m)",
+    fill = "Richness",
+    x = "Longitude",
+    y = "Latitude"
+  ) +
+  theme_minimal()
+
+str(buffers_500m$richness)
+```
+
+
 
 # Extract insights (Shannon's Diversity Matrix)
 # Checked w/ Lauren: this all looks correct! 
