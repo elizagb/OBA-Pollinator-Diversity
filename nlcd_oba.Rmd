@@ -311,14 +311,20 @@ buffers_100m <- st_buffer(oba_sf, dist = 100)
 buffers_500m <- st_buffer(oba_sf, dist = 500)
 buffers_1000m <- st_buffer(oba_sf, dist = 1000)
 
+# Plot the first buffer
+plot(st_geometry(buffers_100m[1, ]))
+
 # Subset points that fall within each buffer
 buffers_100m_subset <- st_intersection(oba_sf, buffers_100m)
 
 
+first_buf <- buffers_100m[1, ]
 # Try indexing oba data by oba buffer:
 # school_robbery <- robberies_may[school_buffer,]
-oba_100m <- oba_sf[buffers_100m,]
+oba_100m <- oba_sf[first_buf,]
 nrow(oba_100m)
+
+class(buffers_100m)
 
 oba_500m <- oba_sf[buffers_500m,]
 nrow(oba_500m)
