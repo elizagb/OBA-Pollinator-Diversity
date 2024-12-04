@@ -57,7 +57,6 @@ or_boundary <- read_sf(dsn = "data/Oregon_State_Boundary_-2975945127261102476/Or
 
 oba <-
   read.csv("data/OBA_2018-2023_combined_dataset_working.csv")
-
 ```
 
 ```{r}
@@ -71,8 +70,8 @@ oba <-
 
 
 # Subset oba data to our needed metadata
-oba <- dplyr::select(oba, Genus, Species, Dec..Lat., Dec..Long., Elevation..m.)
-colnames(oba) <- c("Genus", "Spec", "Lat", "Long", "Elev")
+oba <- dplyr::select(oba, Genus, Species, Dec..Lat., Dec..Long., Elevation..m., MonthJul)
+colnames(oba) <- c("Genus", "Spec", "Lat", "Long", "Elev", "Month")
 
 # head(oba, 60)
 
@@ -81,6 +80,8 @@ colnames(oba) <- c("Genus", "Spec", "Lat", "Long", "Elev")
 
 # Make elevation values numeric 
 oba$Elev <- as.numeric(oba$Elev)
+
+oba <- filter(oba, Month == "July")
 
 ```
 
@@ -295,10 +296,15 @@ head(oba_sf)
 # Creating buffers 
 ```{r oba-buffers}
 
+# Put buffers around only bombus 
+# Issue: creating buffers from same data we're counting on 
+# Send Lauren Teams message about this issue
+
 # Change to crs that uses meters, not feet 
 oba_sf <- st_transform(oba_sf, crs = 32610)
 # crs(oba_cropped_sf)
 
+nrow(oba_sf)
 
 # Generate buffers for each buffer size (in meters)
 buffers_100m <- st_buffer(oba_sf, dist = 100)
@@ -306,35 +312,74 @@ buffers_500m <- st_buffer(oba_sf, dist = 500)
 buffers_1000m <- st_buffer(oba_sf, dist = 1000)
 
 # Subset points that fall within each buffer
-buffers_100m <- st_intersection(oba_sf, buffers_100m)
-buffers_500m <- st_intersection(oba_sf, buffers_500m)
-buffers_1000m <- st_intersection(oba_sf, buffers_1000m)
+buffers_100m_subset <- st_intersection(oba_sf, buffers_100m)
 
+
+# Try indexing oba data by oba buffer:
+# school_robbery <- robberies_may[school_buffer,]
+oba_100m <- oba_sf[buffers_100m,]
+nrow(oba_100m)
+
+oba_500m <- oba_sf[buffers_500m,]
+nrow(oba_500m)
+
+# buffers_500m <- st_intersection(oba_sf, buffers_500m)
+# buffers_1000m <- st_intersection(oba_sf, buffers_1000m)
+
+# buffers_500m_subset <- st_intersects(oba_sf, buffers_500m)
+
+buffers_500m_subset_df <- as.data.frame(buffers_500m_subset)
+
+nrow(buffers_500m_subset)
+
+# buffers_100m <- st_crop(oba_sf, buffers_500m)
+buffers_100m_subset <- st_crop(oba_sf, buffers_100m)
+
+nrow(buffers_500m)
+nrow(buffers_100m_subset)
+
+
+# Plot buffers around the bee observations
+ggplot() +
+  # Plot the Oregon boundary
+  geom_sf(data = or_boundary, fill = NA, color = "black") +
+
+  # Plot the land cover data (NLCD)
+  geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
+
+  # Plot the 100m buffers around OBA data
+  geom_sf(data = buffers_100m_subset, fill = "blue", alpha = 0.3, color = "blue") 
+
+
+
+
+
+# 
 # # Plot buffers around the bee observations
 # ggplot() +
 #   # Plot the Oregon boundary
 #   geom_sf(data = or_boundary, fill = NA, color = "black") +
-#   
+# 
 #   # Plot the land cover data (NLCD)
 #   geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
-#   
+# 
 #   # Plot the 100m buffers around OBA data
 #   geom_sf(data = buffers_100m, fill = "blue", alpha = 0.3, color = "blue") +
-#   
+# 
 #   # Plot the 500m buffers around OBA data
 #   geom_sf(data = buffers_500m, fill = "green", alpha = 0.3, color = "green") +
-#   
+# 
 #   # Plot the 1000m buffers around OBA data
 #   geom_sf(data = buffers_1000m, fill = "red", alpha = 0.3, color = "red") +
-#   
+# 
 #   # Plot the OBA data points
 #   geom_sf(data = oba_cropped_sf, aes(color = "black"), size = 0.1) +
-#   
+# 
 #   # Customize the plot appearance
 #   labs(title = "Buffers Around OBA Bee Observations",
 #        x = "Longitude",
 #        y = "Latitude") +
-#   theme_minimal() 
+#   theme_minimal()
 
 ```
 
@@ -347,7 +392,7 @@ buffers_1000m <- st_intersection(oba_sf, buffers_1000m)
     # Abundance-weight the pixels
 
 
-# Ensure both the raster and buffers share the same CRS
+# Make sure the raster and buffers share the same CRS
 if (st_crs(buffers_100m) != crs(nlcd_resampled)) {
   buffers_100m <- st_transform(buffers_100m, crs(nlcd_resampled))  # Reproject buffers to match raster CRS
 }
@@ -384,7 +429,6 @@ calculate_diversity <- function(buffers, raster) {
 buffers_100m <- calculate_diversity(buffers_100m, nlcd_resampled)
 buffers_500m <- calculate_diversity(buffers_500m, nlcd_resampled)
 buffers_1000m <- calculate_diversity(buffers_1000m, nlcd_resampled)
-
 
 # As example: Plot 1000m buffers colored by their Shannon diversity index
 ggplot() +
