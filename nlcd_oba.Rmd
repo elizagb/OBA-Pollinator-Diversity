@@ -444,6 +444,20 @@ buffers_500m <- buffers_500m %>%
 head(buffers_500m)
 
 ```
+```{r}
+# Scatter plot of landscape diversity vs. bee species richness
+ggplot(buffers_500m, aes(x = landscape_div, y = normalized_richness)) +
+  geom_point(aes(color = ElevationBand), alpha = 0.7) +  # Color by buffer_id
+  labs(
+    title = "Landscape Diversity vs. Bee Species Richness",
+    x = "Landscape Diversity (Shannon Index)",
+    y = "Normalized Bee Species Richness"
+  ) +
+  theme_minimal() 
+```
+
+
+
 
 
 # Extract insights (Shannon's Diversity Matrix)
@@ -482,129 +496,5 @@ head(buffers_500m)
 # }
 ```
 
-```{r}
-# # colnames(combined_buffers)
-# # head(combined_buffers)
-# 
-# # (WGS 84 / UTM zone 10N) for the West Coast (uses meters):
-# # buffers_500m <- st_transform(buffers_500m, crs = 32610)
-# 
-# model <- lm(shannon_div ~ ElevationBand + BufferSize, data = combined_buffers)
-# 
-# 
-# ggplot(combined_buffers, aes(x = shannon_div, y = SpeciesRichnessIndex, color = ElevationBand)) +
-#   geom_point() +
-#   geom_smooth(method = "lm") +
-#   facet_wrap(~BufferSize) +
-#   labs(title = "Impact of Land Cover Diversity on Bee Diversity",
-#        x = "Shannon Diversity (Land Cover)",
-#        y = "Relative Bee Richness (SpeciesRichnessIndex)")
-# 
-# 
-# ```
-# ```{r}
-# # Create a grid of values for prediction
-# prediction_data <- expand.grid(
-#   ElevationBand = unique(combined_buffers$ElevationBand),
-#   BufferSize = unique(combined_buffers$BufferSize)
-# )
-# 
-# # Add predicted values from the model
-# prediction_data$PredictedShannon <- predict(model, newdata = prediction_data)
-# 
-# 
-# library(ggplot2)
-# 
-# ggplot(combined_buffers, aes(x = BufferSize, y = shannon_div, color = ElevationBand)) +
-#   geom_point(alpha = 0.5, size = 2) +  # Scatterplot of actual data
-#   geom_line(data = prediction_data, aes(x = BufferSize, y = PredictedShannon, group = ElevationBand), size = 1) +
-#   labs(
-#     title = "Effect of Buffer Size and Elevation on Shannon Diversity",
-#     x = "Buffer Size (meters)",
-#     y = "Shannon Diversity (Predicted and Observed)"
-#   ) +
-#   theme_minimal() +
-#   theme(legend.position = "top")
-# 
-# 
-# ```
-# ```{r}
-# combined_buffers$GenusSpec_Prop
-# 
-# # summary(combined_buffers$landscape_div)
-# # colnames(combined_buffers)
-# 
-# # Used for lines of best fit 
-# # Create prediction data for each BufferSize
-# prediction_data2 <- expand.grid(
-#   LandscapeDiv = seq(min(combined_buffers$shannon_div, na.rm = TRUE), 
-#                      max(combined_buffers$shannon_div, na.rm = TRUE), 
-#                      length.out = 100),
-#   
-#   BufferSize = c(100, 500, 1000),
-#   
-#   ElevationBand = unique(combined_buffers$ElevationBand)
-# )
-# 
-# # Add predictions
-# prediction_data2$PredictedShannon <- predict(model, newdata = prediction_data2)
-# 
-# # Create the plot
-# ggplot() +
-#   # Scatter points from combined_buffers
-#   geom_point(data = combined_buffers, aes(
-#     x = shannon_div, 
-#     y = GenusSpec_Prop, 
-#     color = ElevationBand
-#   ), alpha = 0.7, size = 2) +
-#   
-#   # Lines of best fit from prediction_data2
-#   geom_line(data = prediction_data2, aes(
-#     x = LandscapeDiv, 
-#     y = PredictedShannon, 
-#     color = factor(BufferSize)
-#   ), size = 1.2) +
-#   
-#   # Customize colors, labels, and theme
-#   scale_color_manual(values = c("blue", "green", "red", "purple", "orange", "yellow", "lightblue")) +
-#   labs(
-#     title = "Relationship Between Landscape Diversity and Bee Diversity",
-#     x = "Landscape Diversity",
-#     y = "Bee Diversity (Shannon Index)",
-#     color = "Legend"
-#   ) +
-#   theme_minimal() +
-#   theme(legend.position = "top") +
-#   guides(
-#     color = guide_legend(
-#       override.aes = list(size = 3)  # Adjust legend point size
-#     )
-#   )
-# 
-# ```
-# ```{r}
-# ggplot(combined_buffers, aes(x = shannon_div, y = GenusSpec_Prop)) +
-#   geom_point(aes(color = ElevationBand), alpha = 0.7, size = 2) +  # Scatter points
-#   geom_smooth(
-#     aes(color = factor(BufferSize)), 
-#     method = "lm", 
-#     se = FALSE, 
-#     size = 1.2
-#   ) +  # Best-fit lines for each BufferSize
-#   labs(
-#     title = "Relationship Between Landscape and Bee Diversity",
-#     x = "Landscape Diversity (Shannon Index)",
-#     y = "Bee Diversity",
-#     color = "Legend"
-#   ) +
-#   # scale_color_manual(values = c("blue", "green", "red")) +  # Adjust colors
-#   theme_minimal() +
-#   theme(legend.position = "top") +
-#   guides(
-#     color = guide_legend(
-#       override.aes = list(size = 3)
-#     )
-#   )
-```
 
 
