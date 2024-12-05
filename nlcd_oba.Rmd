@@ -491,40 +491,6 @@ head(buffers_500m)
 ```
 
 
-```{r}
-# Scatter plot of landscape diversity vs. bee species richness
-ggplot(buffers_500m, aes(x = landscape_div, y = normalized_richness)) +
-  geom_point(aes(color = ElevationBand), alpha = 0.7) +  # Color by buffer_id
-  labs(
-    title = "Landscape Diversity vs. Bee Species Richness",
-    x = "Landscape Diversity (Shannon Index)",
-    y = "Normalized Bee Species Richness"
-  ) +
-  geom_smooth(method = "lm")+
-  theme_minimal() 
-
-
-# Richness of 1: if a bee is all alone in a buffer (1/1)
-# Better labels for elevations 
-```
-
-```{r}
-# Scatter plot of landscape diversity vs. bee species richness
-ggplot(buffers_500m, aes(x = landscape_div, y = bee_diversity)) +
-  geom_point(aes(color = ElevationBand), alpha = 0.7) +  # Color by buffer_id
-  labs(
-    title = "Landscape Diversity vs. Bee Species Diversity",
-    x = "Landscape Diversity (Shannon Index)",
-    y = "Bee Species Diversity (Shannon Index)"
-  ) +
-  geom_smooth(method = "lm")+
-  theme_minimal() 
-
-
-# Richness of 1: if a bee is all alone in a buffer (1/1)
-# Better labels for elevations 
-```
-
 
 ```{r linear model-diversity}
 bee_div <- buffers_500m$bee_diversity
@@ -553,21 +519,51 @@ summary(mod2)
 ```
 
 ```{r}
+# Set up plot colors
+main_colors <- c("#008000", "#FF1493", "#1E90FF", "#FFA500")
+
+# Scatter plot of landscape diversity vs. bee species richness
+ggplot(buffers_500m, aes(x = landscape_div, y = normalized_richness)) +
+  geom_point(aes(color = ElevationBand), alpha = 0.7) +  # Color by buffer_id
+  scale_color_manual(values = main_colors) +
+  labs(
+    title = "Landscape Diversity vs. Bee Species Richness",
+    x = "Landscape Diversity (Shannon Index)",
+    y = "Normalized Bee Species Richness"
+  ) +
+  geom_smooth(method = "lm")+
+  theme_minimal() 
+
+
+# Richness of 1: if a bee is all alone in a buffer (1/1)
+# Better labels for elevations 
+```
+
+```{r}
+# Scatter plot of landscape diversity vs. bee species richness
+ggplot(buffers_500m, aes(x = landscape_div, y = bee_diversity)) +
+  geom_point(aes(color = ElevationBand), alpha = 0.7) +  # Color by buffer_id
+  scale_color_manual(values = main_colors) + 
+  labs(
+    title = "Landscape Diversity vs. Bee Species Diversity",
+    x = "Landscape Diversity (Shannon Index)",
+    y = "Bee Species Diversity (Shannon Index)"
+  ) +
+  geom_smooth(method = "lm")+
+  theme_minimal() 
+
+
+# Richness of 1: if a bee is all alone in a buffer (1/1)
+# Better labels for elevations 
+```
+
+```{r}
 # Plot landcover, oba, buffers 
 
-colors <- c(
-  "dodgerblue2",
-  "green4",
-  "#6A3D9A", # purple
-  "#FF7F00", # orange
-  "black", "gold1",
-  "skyblue2", "#FB9A99", # lt pink
-  "#CAB2D6", # lt purple
-  "#FDBF6F", # lt orange
-  "gray70", "orchid1", "blue1", "steelblue4",
-  "darkturquoise", "green1", "yellow4",
-  "darkorange4"
-)
+# Import colors
+library(RColorBrewer)
+colors <- c(brewer.pal(9, "Dark2"), brewer.pal(9, "Paired"))
+
 
 # Plot buffers around the bee observations
 ggplot() +
@@ -583,21 +579,42 @@ ggplot() +
   # geom_sf(data = oba_sf, aes(color = "black"), size = 0.1) +
 
   # Plot the 500m buffers around OBA data
-  geom_sf(data = buffers_500m, fill = "black", alpha = 0.3, color = "black") +
+  geom_sf(data = buffers_500m, fill = "black", alpha = 1, color = "black") +
 
   # Customize the plot appearance
   labs(title = "Buffers Around OBA Bee Observations",
        x = "Longitude",
-       y = "Latitude") +
+       y = "Latitude"), 
+       caption = "Buffers (500m) are shown in ." + 
   theme_minimal()
 ```
 
-
 ```{r}
-# Next steps: 
-    # Create boxplots to extract stats 
-    # Group together some types of landcover 
+# Create boxplots:
 
-    # Make graphs prettier! 
+# Boxplot comparing landscape diversity for elevation bands 
+boxplot(landscape_div~ElevationBand, data=buffers_500m, main="Landscape Diversity at Elevation Bands",
+   xlab="Elevation (m)", ylab="Bee Diversity",
+   col = main_colors, border = "black", notch = TRUE, notchwidth = 0.5,
+        medcol = "white", whiskcol = "black", boxwex = 0.5, outpch = 19,
+        outcol = "black")
+
+# Legend
+legend("topright", legend = unique(buffers_500m$ElevationBand), 
+       fill = main_colors, border = "black", title = "Elevation Bands", 
+       cex = 0.6)  # cex to control font size
+
+
+# Boxplot comparing bee diversity for elevation bands 
+boxplot(bee_diversity~ElevationBand, data=buffers_500m, main="Bee Diversity at Elevation Bands",
+   xlab="Elevation (m)", ylab="Bee Diversity", 
+   col = main_colors, border = "black", notch = TRUE, notchwidth = 0.5,
+        medcol = "white", whiskcol = "black", boxwex = 0.5, outpch = 19,
+        outcol = "black")
+
+# Legend
+legend("bottomleft", legend = unique(buffers_500m$ElevationBand), 
+       fill = main_colors, border = "black", title = "Elevation Bands", cex = 0.6)
+
 ```
 
