@@ -57,6 +57,8 @@ or_boundary <- read_sf(dsn = "data/Oregon_State_Boundary_-2975945127261102476/Or
 
 oba <-
   read.csv("data/OBA_2018-2023_combined_dataset_working.csv")
+
+
 ```
 
 ```{r}
@@ -126,6 +128,7 @@ library(raster)
 nlcd <- rast("data/NLCD_2016_Land_Cover_OR/NLCD_2016_Land_Cover_OR.img")
 
 
+
 # LOWER RESOLUTION AND CREATE DF:
 # Check original resolution
 # Original: 98.4252 98.4252 
@@ -142,6 +145,10 @@ template <- rast(extent = extent_nlcd, res = target_res, crs = crs(nlcd))
 
 # Resample the original raster to match the new template
 nlcd_resampled <- resample(nlcd, template, method = "near")  # Use "bilinear" for continuous data or "near" for categorical
+
+#make sure it has the same CRS as the other data
+ 
+
 
 print(nlcd_resampled)
 
@@ -423,7 +430,8 @@ ggplot() +
 # Using the vegan package to compute Shannon's diversity index
 
 # Calculate Shannon's diversity index for each buffer
-bee_diversity <- diversity(community_matrix, index = "shannon")
+bee_diversity <- vegan::diversity(community_matrix, index = "shannon")
+
 
 # Create a dataframe with buffer ID and Shannon's diversity
 diversity_df <- tibble(
@@ -441,7 +449,7 @@ head(buffers_500m)
 
 ## Find landscape diversity for each buffer; append to buffers_500m
 ```{r}
-
+buffers_500m <- st_transform(buffers_500m, crs = st_crs(nlcd_resampled))
 # Spatial join to extract land cover types from NLCD raster within each buffer
 land_cover_in_buffers <- extract(nlcd_resampled, buffers_500m, fun = function(x) {
   # Get the most frequent land cover type in the buffer area
@@ -450,7 +458,8 @@ land_cover_in_buffers <- extract(nlcd_resampled, buffers_500m, fun = function(x)
     land_cover_count <- table(x)
     
     # Use vegan diversity() function to calculate Shannon's Div Index
-    shannon_index <- diversity(as.numeric(land_cover_count), index = "shannon")
+    shannon_index <- vegan::diversity(as.numeric(land_cover_count), index = "shannon")
+
     
     # Manual method: 
     # land_cover_freq <- land_cover_count / sum(land_cover_count)
@@ -491,6 +500,7 @@ ggplot(buffers_500m, aes(x = landscape_div, y = normalized_richness)) +
     x = "Landscape Diversity (Shannon Index)",
     y = "Normalized Bee Species Richness"
   ) +
+  geom_smooth(method = "lm")+
   theme_minimal() 
 
 
@@ -507,6 +517,7 @@ ggplot(buffers_500m, aes(x = landscape_div, y = bee_diversity)) +
     x = "Landscape Diversity (Shannon Index)",
     y = "Bee Species Diversity (Shannon Index)"
   ) +
+  geom_smooth(method = "lm")+
   theme_minimal() 
 
 
@@ -518,24 +529,7 @@ ggplot(buffers_500m, aes(x = landscape_div, y = bee_diversity)) +
 # Plot landcover, oba, buffers 
 
 # Plot buffers around the bee observations
-ggplot() +
-  # Plot the Oregon boundary
-  geom_sf(data = or_boundary, fill = NA, color = "black") +
 
-  # Plot the land cover data (NLCD)
-  geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
-
-  # Plot the 500m buffers around OBA data
-  geom_sf(data = buffers_500m, fill = "red", alpha = 0.3, color = "red") +
-
-  # Plot the OBA data points
-  geom_sf(data = oba_cropped_sf, aes(color = "black"), size = 0.1) +
-
-  # Customize the plot appearance
-  labs(title = "Buffers Around OBA Bee Observations",
-       x = "Longitude",
-       y = "Latitude") +
-  theme_minimal()
 ```
 
 ```{r}
