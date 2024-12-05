@@ -524,6 +524,30 @@ ggplot(buffers_500m, aes(x = landscape_div, y = bee_diversity)) +
 # Richness of 1: if a bee is all alone in a buffer (1/1)
 # Better labels for elevations 
 ```
+```{r linear model-diversity}
+bee_div <- buffers_500m$bee_diversity
+names(bee_div) <- NULL
+land_div <- buffers_500m$landscape_div
+
+dats_div <- data.frame(bee_div = bee_div,
+                       land_div=land_div)
+
+mod <- lm(bee_div ~ scale(land_div), data=dats_div)
+summary(mod)
+```
+```{r linear model- richness}
+bee_rich <- buffers_500m$normalized_richness
+names(bee_rich) <- NULL
+
+
+dats_rich <- data.frame(bee_rich = bee_rich,
+                       land_div=land_div)
+
+mod2 <- lm(bee_rich ~ scale(land_div), data=dats_rich)
+summary(mod2)
+
+
+```
 
 ```{r}
 # Plot landcover, oba, buffers 
