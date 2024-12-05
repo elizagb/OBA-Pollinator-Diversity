@@ -584,8 +584,8 @@ ggplot() +
   # Customize the plot appearance
   labs(title = "Buffers Around OBA Bee Observations",
        x = "Longitude",
-       y = "Latitude"), 
-       caption = "Buffers (500m) are shown in ." + 
+       y = "Latitude", 
+       caption = "Buffers (500m) are plotted as black circles")
   theme_minimal()
 ```
 
@@ -594,7 +594,7 @@ ggplot() +
 
 # Boxplot comparing landscape diversity for elevation bands 
 boxplot(landscape_div~ElevationBand, data=buffers_500m, main="Landscape Diversity at Elevation Bands",
-   xlab="Elevation (m)", ylab="Bee Diversity",
+   xlab="Elevation (m)", ylab="Landscape Diversity",
    col = main_colors, border = "black", notch = TRUE, notchwidth = 0.5,
         medcol = "white", whiskcol = "black", boxwex = 0.5, outpch = 19,
         outcol = "black")
