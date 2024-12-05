@@ -524,14 +524,14 @@ main_colors <- c("#008000", "#FF1493", "#1E90FF", "#FFA500")
 
 # Scatter plot of landscape diversity vs. bee species richness
 ggplot(buffers_500m, aes(x = landscape_div, y = normalized_richness)) +
-  geom_point(aes(color = ElevationBand), alpha = 0.7) +  # Color by buffer_id
+  geom_point(aes(color = ElevationBand), alpha = 0.7) +  # Color by ElevationBand
   scale_color_manual(values = main_colors) +
   labs(
     title = "Landscape Diversity vs. Bee Species Richness",
     x = "Landscape Diversity (Shannon Index)",
     y = "Normalized Bee Species Richness"
   ) +
-  geom_smooth(method = "lm")+
+  geom_smooth(method = "lm", color = "black") +
   theme_minimal() 
 
 
@@ -542,14 +542,14 @@ ggplot(buffers_500m, aes(x = landscape_div, y = normalized_richness)) +
 ```{r}
 # Scatter plot of landscape diversity vs. bee species richness
 ggplot(buffers_500m, aes(x = landscape_div, y = bee_diversity)) +
-  geom_point(aes(color = ElevationBand), alpha = 0.7) +  # Color by buffer_id
+  geom_point(aes(color = ElevationBand), alpha = 0.7) +  # Color by ElevationBand
   scale_color_manual(values = main_colors) + 
   labs(
     title = "Landscape Diversity vs. Bee Species Diversity",
     x = "Landscape Diversity (Shannon Index)",
     y = "Bee Species Diversity (Shannon Index)"
   ) +
-  geom_smooth(method = "lm")+
+  geom_smooth(method = "lm", color = "black") +
   theme_minimal() 
 
 
@@ -582,7 +582,7 @@ ggplot() +
   geom_sf(data = buffers_500m, fill = "black", alpha = 1, color = "black") +
 
   # Customize the plot appearance
-  labs(title = "Buffers Around OBA Bee Observations",
+  labs(title = "Oregon Land Cover with Buffered Bee Observations",
        x = "Longitude",
        y = "Latitude", 
        caption = "Buffers (500m) are plotted as black circles")
