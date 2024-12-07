@@ -12,57 +12,26 @@ library(ggplot2)
 library(dplyr)
 library(sf)
 library(tidyr)
+library(vegan)
+library(tibble) 
+
 ```
 
-NOTES from conversation with Lauren:  
-
-- diversity of habitat types  
-- don't subset to the two categories  
-
-- calculate diversity at 100, 500, 1000 meters (changing buffer size) 
-- a Buffer around every single bee (hypothetical place every bee would forage in) 
-- find the pixel diversity in each of those buffers (to see if habitat heterogeneity improves bee diversity) 
-
-- different generae associated with different habitat  
-
-- in each buffer: number of species / number of observations (richness/diversity) 
-      - richness factoring in variability in data collection 
-      - relative richness to the number of observations  
-      
-- Split up the whole state / every bee observation into three elevational segments/bands  
-- Look and bin some of the landcover data  
-- Abundance-weight the pixels (shannon's, matrixes of diversity) 
-- Use extract to create buffers  
-- Don't do the label shuffling; use R lm() function  
-- diversity begets diversity ecology (DBD) theory : paper that supports our research 
-
-
-# Oregon basemap
-
+# Load in Oregon basemap
 ```{r plot-or}
-
 or_boundary <- read_sf(dsn = "data/Oregon_State_Boundary_-2975945127261102476/Oregon_State_Boundary.shp")
 # str(or_boundary)
 
 ```
 
-
-
-
-# 1. OBA Manipulation
-
+# Load in OBA Data
 ```{r oba-import}
-
-# Import OBA data:
-
 oba <-
   read.csv("data/OBA_2018-2023_combined_dataset_working.csv")
-
-
 ```
 
-```{r}
-# Segment OBA data: 
+# Segment OBA data
+```{r oba-segment}
 
 # - Metadata we need:
 #   - `Species`: The taxonomic identification of each bee (group of closely related species)
@@ -70,28 +39,17 @@ oba <-
 #   - `Elevation`: The elevation (in meters) at which each bee was collected.
 #   - `Coordinates`: Latitude (`Dec.Lat.`) and longitude (`Dec.Long.`) in decimal degrees.
 
-
 # Subset oba data to our needed metadata
 oba <- dplyr::select(oba, Genus, Species, Dec..Lat., Dec..Long., Elevation..m., MonthJul)
 colnames(oba) <- c("Genus", "Spec", "Lat", "Long", "Elev", "Month")
 
-# head(oba, 60)
-
-# row count before cleaning: 195788
-# nrow(oba)
-
 # Make elevation values numeric 
 oba$Elev <- as.numeric(oba$Elev)
 
-# Filter data to just July 
-# oba <- filter(oba, Month == "July")
-
 ```
 
-
-```{r}
 # Clean OBA data
-
+```{r oba-clean}
 # Remove elevation rows with null values 
 
 for (col in colnames(oba)) {
@@ -103,9 +61,8 @@ for (col in colnames(oba)) {
 # head(oba, 10)
 ```
 
-
-
-```{r}
+# Combine genus & species columns in OBA data
+```{r genus-spec}
 # Combine genus & species 
 GenusSpec <- paste(oba$Genus, oba$Spec, sep=" ")
 
@@ -116,9 +73,7 @@ oba <- oba %>%
 #nhead(oba, 10)
 ```
 
-
-# 2. NLCD Manipulation
-
+# Load in NLCD - Oregon (National Land Cover Database)
 ```{r nlcd-import, include=FALSE}
 library(raster)
 
@@ -127,17 +82,24 @@ library(raster)
 # Load landcover data as raster 
 nlcd <- rast("data/NLCD_2016_Land_Cover_OR/NLCD_2016_Land_Cover_OR.img")
 
+# crs(nlcd)
+# nlcd <- st_transform(oba_sf, crs = 32610)
 
 
 # LOWER RESOLUTION AND CREATE DF:
 # Check original resolution
 # Original: 98.4252 98.4252 
-original_res <- res(nlcd)
+# original_res <- res(nlcd)
 # cat("Original resolution:", original_res, "\n")
 
+
+```
+
+# NLCD Manipulation
+```{r}
 # Create a new template raster with the desired resolution
-# The larger the resolution, the easier to load (make this smaller for final run)
-target_res <- 500  # Desired resolution in map units (e.g., meters)
+# The larger the resolution, the easier to load
+target_res <- 500  # Desired resolution in original map units (feet)
 extent_nlcd <- ext(nlcd)  # Get the extent of the original raster
 
 # Create an empty raster template
@@ -145,12 +107,6 @@ template <- rast(extent = extent_nlcd, res = target_res, crs = crs(nlcd))
 
 # Resample the original raster to match the new template
 nlcd_resampled <- resample(nlcd, template, method = "near")  # Use "bilinear" for continuous data or "near" for categorical
-
-#make sure it has the same CRS as the other data
- 
-
-
-print(nlcd_resampled)
 
 # Convert raster to data frame for plotting 
 nlcd_df <- as.data.frame(nlcd_resampled, na.rm = TRUE, xy = TRUE)
@@ -185,115 +141,61 @@ nlcd_df <- nlcd_df %>%
 # Observe dataframe columns 
 head(nlcd_df, 50)
 
+# Visuaization test: 
 # Create a heatmap with discrete categories in 'Layer_1'
-ggplot(nlcd_df, aes(x = x, y = y, fill = LandType)) +
-  geom_tile() +  # Create a heatmap-like plot with tiles
-  scale_fill_viridis_d() +  # Use a discrete color scale (viridis is suitable for categorical data)
-  theme_minimal() +  # Clean theme
-  labs(title = "Land Cover Data",
-       x = "Longitude",
-       y = "Latitude",
-       fill = "Land Cover Type") +
-  coord_fixed()  # Fix aspect ratio to prevent distortion
+
+# ggplot(nlcd_df, aes(x = x, y = y, fill = LandType)) +
+#   geom_tile() +  # Create a heatmap-like plot with tiles
+#   scale_fill_viridis_d() +  # Use a discrete color scale (viridis is suitable for categorical data)
+#   theme_minimal() +  # Clean theme
+#   labs(title = "Land Cover Data",
+#        x = "Longitude",
+#        y = "Latitude",
+#        fill = "Land Cover Type") +
+#   coord_fixed()  # Fix aspect ratio to prevent distortion
 
 ```
 
 
-# 3. Spational Integration
-## Perform a spatial overlay to assign land cover types from NLCD to OBA points.
+# 3. Spatial Integration
 
 ```{r}
 # Spatial Integration
-# Convert OBA bee observations to spatial points
+  # Convert OBA bee observations to spatial points
+  # Convert Oregon boundary to spatial object 
 
-# Convert OBA data to spatial points (assuming "Lat" and "Long" are in decimal degrees)
+# Convert OBA data to spatial points
 oba_sf <- st_as_sf(oba, coords = c("Long", "Lat"), crs = 4326)
-
 
 # Transform to the same CRS as the NLCD raster (assuming the raster is in UTM)
 oba_sf <- st_transform(oba_sf, crs = crs(nlcd_resampled))
 
-# # 2. Plot the datasets
-# ggplot() +
-#   # Plot the land cover data (NLCD) as a raster
-#   geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
-#   
-#   # Overlay OBA bee observations as spatial points, colored by elevation
-#   geom_sf(data = oba_sf, size = 1, aes(color = "red")) +
-#   
-#   # Customize the plot appearance
-#   labs(title = "OBA Bee Observations Overlaid on NLCD Land Cover",
-#        x = "Longitude",
-#        y = "Latitude",
-#        fill = "Land Cover Type",
-#        color = "Elevation (m)") +
-#   
-#   theme_minimal() +
-#   
-#   # for spatial data handling
-#   coord_sf()
+# Convert Oregon boundary to spatial object 
+or_boundary <- st_as_sf(or_boundary, coords = c("lon", "lat"), crs = crs(oba_sf))
 
 ```
 
 # Crop oba and nlcd to or 
 ```{r}
-# Make or crs match
-# or_boundary <- st_transform(or_boundary, crs = st_crs(oba_sf))
-# str(or_boundary)
-
-# ISSUE: creates a set of points, not a continuous border 
-# st_geometry_type(or_boundary_sf)
-
 # Clip OBA data to Oregon boundary
-# oba_cropped_sf <- st_crop(oba_sf, or_boundary_sf)
 oba_sf <- st_crop(oba_sf, or_boundary)
 str(oba_sf)
 
 # Check the result
 summary(oba_sf)
-
-# Check the result
-# summary(oba_cropped)
 ```
 ```{r}
 
 or_boundary <- st_as_sf(or_boundary, coords = c("lon", "lat"), crs = crs(oba_sf))
-
-# Test: plotting land cover and oba data over oregon border to ensure that oba data cropped to or border
-# Plot using geom_sf for the Oregon boundary
-# ggplot() +
-#   # Plot the Oregon boundary
-#   
-#   # geom_sf(data = or_boundary, x = lat, y = lon, fill = NA, color = "black") +  # OR boundary
-#   # geom_polygon(data = or_boundary, aes(x = lon, y = lat, group = group), fill = NA, color = "black")
-#   geom_sf(data = or_boundary, fill = NA, color = "black") +
-# 
-#   # Plot the raster data (NLCD)
-#   geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
-#   
-#   # Plot the cropped OBA data (inside Oregon boundary)
-#   geom_sf(data = oba_sf, aes(fill = "black"), size = .5) +
-#   
-#   # Customize the plot appearance
-#   labs(title = "Cropped OBA Data, Oregon Boundary, and NLCD",
-#        x = "Longitude",
-#        y = "Latitude",
-#        color = "OBA Observations") +
-#   theme_minimal() 
-
-
 ```
 # Elevational Band Categorization
 ## Define elevation bands (Low, Middle, High).
 ## Assign OBA observations to corresponding elevation bands.
 
 ```{r}
-
-# crs(oba_sf)
-
 # Divide data into elevational bands
 elevation_bands <- cut(oba_sf$Elev, breaks = c(0, 500, 1000, 1500, Inf), 
-                       labels = c("Low: 0-500m", "Medium: 500-1000m", "High: 1000-1500m", "Very High: 1500m-"))
+                       labels = c("0-500m", "500-1000m", "1000-1500m", "1500m+"))
 
 # Add to spatial data
 oba_sf <- oba_sf %>%
@@ -307,10 +209,6 @@ head(oba_sf)
 # Creating buffers 
 ```{r oba-buffers}
 
-# Idea: Put buffers around only bombus?
-# Issue: creating buffers from same data we're counting on 
-# Send Lauren Teams message about this issue
-
 # Change to crs that uses meters, not feet 
 oba_sf <- st_transform(oba_sf, crs = 32610)
 
@@ -323,61 +221,12 @@ buffers_500m$buffer_id <- seq_len(nrow(buffers_500m))
 #perform spatial join: this assigns each species point to a buffer by buffer_id
 species_in_buffers <- st_join(oba_sf, buffers_500m, join = st_within)
 
-# Test 
-# head(species_in_buffers)
-
-# Try indexing oba data by oba buffer:
-# school_robbery <- robberies_may[school_buffer,]
-# oba_500m <- oba_sf[buffers_500m,]
-# nrow(oba_500m)
-
-# 
-# # Plot buffers around the bee observations
-# ggplot() +
-#   # Plot the Oregon boundary
-#   geom_sf(data = or_boundary, fill = NA, color = "black") +
-# 
-#   # Plot the land cover data (NLCD)
-#   geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
-# 
-#   # Plot the 100m buffers around OBA data
-#   geom_sf(data = buffers_100m, fill = "blue", alpha = 0.3, color = "blue") +
-# 
-#   # Plot the 500m buffers around OBA data
-#   geom_sf(data = buffers_500m, fill = "green", alpha = 0.3, color = "green") +
-# 
-#   # Plot the 1000m buffers around OBA data
-#   geom_sf(data = buffers_1000m, fill = "red", alpha = 0.3, color = "red") +
-# 
-#   # Plot the OBA data points
-#   geom_sf(data = oba_cropped_sf, aes(color = "black"), size = 0.1) +
-# 
-#   # Customize the plot appearance
-#   labs(title = "Buffers Around OBA Bee Observations",
-#        x = "Longitude",
-#        y = "Latitude") +
-#   theme_minimal()
-
 ```
 
 
 
 ## Calculating and organizing species richness for each buffer 
 ```{r vegan package richness}
-# CHECKPOINT: successfully join richness data with buffers
-
-# change to diversity? The 0 for 1 species 
-# go through and make histograms of the actual data for sanity checks 
-# could drop buffers with only 1 bee
-# show for all months 
-  # only map subset to July? 
-
-# We could compare results for richness vs. diversity 
-  # diversity() from vegan package - 
-  # use shannons for both bee and landscape div 
-
-library(vegan)
-library(tibble) 
 
 community_matrix <- species_in_buffers %>%
     st_drop_geometry() %>%                    # Drop spatial data for tabular manipulation
@@ -432,7 +281,6 @@ ggplot() +
 # Calculate Shannon's diversity index for each buffer
 bee_diversity <- vegan::diversity(community_matrix, index = "shannon")
 
-
 # Create a dataframe with buffer ID and Shannon's diversity
 diversity_df <- tibble(
   buffer_id = as.integer(rownames(community_matrix)), # Extract buffer IDs as integers
@@ -459,11 +307,6 @@ land_cover_in_buffers <- extract(nlcd_resampled, buffers_500m, fun = function(x)
     
     # Use vegan diversity() function to calculate Shannon's Div Index
     shannon_index <- vegan::diversity(as.numeric(land_cover_count), index = "shannon")
-
-    
-    # Manual method: 
-    # land_cover_freq <- land_cover_count / sum(land_cover_count)
-    # shannon_index <- -sum(land_cover_freq * log(land_cover_freq), na.rm = TRUE)
     
     return(shannon_index)
   } else {
@@ -477,9 +320,6 @@ land_cover_in_buffers <- land_cover_in_buffers %>%
     landscape_div = Layer_1,
     buffer_id = ID
   )
-
-# Check the result (it's a df)
-# head(land_cover_in_buffers)
 
 # Join diversity vals with buffers df 
 # NOTE for testing: only run once 
@@ -528,11 +368,15 @@ ggplot(buffers_500m, aes(x = landscape_div, y = normalized_richness)) +
   scale_color_manual(values = main_colors) +
   labs(
     title = "Landscape Diversity vs. Bee Species Richness",
-    x = "Landscape Diversity (Shannon Index)",
-    y = "Normalized Bee Species Richness"
+    x = "Landscape Diversity (Shannon's Index)",
+    y = "Normalized Bee Species Richness",
+    caption = "The black line represents the linear regression fit."
   ) +
   geom_smooth(method = "lm", color = "black") +
-  theme_minimal() 
+  theme_minimal() +
+  theme(
+    plot.caption = element_text(hjust = 0)  # Left-align caption
+  )
 
 
 # Richness of 1: if a bee is all alone in a buffer (1/1)
@@ -546,15 +390,16 @@ ggplot(buffers_500m, aes(x = landscape_div, y = bee_diversity)) +
   scale_color_manual(values = main_colors) + 
   labs(
     title = "Landscape Diversity vs. Bee Species Diversity",
-    x = "Landscape Diversity (Shannon Index)",
-    y = "Bee Species Diversity (Shannon Index)"
+    x = "Landscape Diversity (Shannon's Index)",
+    y = "Bee Species Diversity (Shannon's Index)",
+    caption = "The black line represents the linear regression fit."
   ) +
   geom_smooth(method = "lm", color = "black") +
-  theme_minimal() 
+  theme_minimal() +
+  theme(
+    plot.caption = element_text(hjust = 0)  # Left-align caption
+  )
 
-
-# Richness of 1: if a bee is all alone in a buffer (1/1)
-# Better labels for elevations 
 ```
 
 ```{r}
@@ -564,7 +409,6 @@ ggplot(buffers_500m, aes(x = landscape_div, y = bee_diversity)) +
 library(RColorBrewer)
 colors <- c(brewer.pal(9, "Dark2"), brewer.pal(9, "Paired"))
 
-
 # Plot buffers around the bee observations
 ggplot() +
   # Plot the Oregon boundary
@@ -573,10 +417,6 @@ ggplot() +
   # Plot the land cover data (NLCD)
   geom_raster(data = nlcd_df, aes(x = x, y = y, fill = LandType)) +
   scale_fill_manual(values = colors, name = "Land Cover") + 
-  
-  
-  # Plot the OBA data points
-  # geom_sf(data = oba_sf, aes(color = "black"), size = 0.1) +
 
   # Plot the 500m buffers around OBA data
   geom_sf(data = buffers_500m, fill = "black", alpha = 1, color = "black") +
@@ -590,7 +430,7 @@ ggplot() +
 ```
 
 ```{r}
-# Create boxplots:
+# Create boxplots for diversity:
 
 # Boxplot comparing landscape diversity for elevation bands 
 boxplot(landscape_div~ElevationBand, data=buffers_500m, main="Landscape Diversity at Elevation Bands",
@@ -615,6 +455,54 @@ boxplot(bee_diversity~ElevationBand, data=buffers_500m, main="Bee Diversity at E
 # Legend
 legend("bottomleft", legend = unique(buffers_500m$ElevationBand), 
        fill = main_colors, border = "black", title = "Elevation Bands", cex = 0.6)
+
+
+# Boxplot comparing bee richness for elevation bands 
+boxplot(bee_rich~ElevationBand, data=buffers_500m, main="Bee Richness at Elevation Bands",
+   xlab="Elevation (m)", ylab="Bee Richness", 
+   col = main_colors, border = "black", notch = TRUE, notchwidth = 0.5,
+        medcol = "white", whiskcol = "black", boxwex = 0.5, outpch = 19,
+        outcol = "black")
+
+# Legend
+legend("topright", legend = unique(buffers_500m$ElevationBand), 
+       fill = main_colors, border = "black", title = "Elevation Bands", cex = 0.6)
+
+```
+# Summary stats for boxplots 
+```{r}
+
+# Summary stats for Landscape Diversity by Elevation Band
+landscape_stats <- aggregate(landscape_div ~ ElevationBand, data = buffers_500m, 
+                             FUN = function(x) c(mean = mean(x), median = median(x), 
+                                                 min = min(x), max = max(x), 
+                                                 IQR = IQR(x)))
+# Unnest the results for better readability
+landscape_stats <- do.call(data.frame, landscape_stats)
+
+# Summary stats for Bee Diversity by Elevation Band
+bee_diversity_stats <- aggregate(bee_diversity ~ ElevationBand, data = buffers_500m, 
+                                  FUN = function(x) c(mean = mean(x), median = median(x), 
+                                                      min = min(x), max = max(x), 
+                                                      IQR = IQR(x)))
+bee_diversity_stats <- do.call(data.frame, bee_diversity_stats)
+
+# Summary stats for Bee Richness by Elevation Band
+bee_richness_stats <- aggregate(bee_rich ~ ElevationBand, data = buffers_500m, 
+                                 FUN = function(x) c(mean = mean(x), median = median(x), 
+                                                     min = min(x), max = max(x), 
+                                                     IQR = IQR(x)))
+bee_richness_stats <- do.call(data.frame, bee_richness_stats)
+
+# Print the results
+print("Landscape Diversity Stats:")
+landscape_stats
+
+print("Bee Diversity Stats:")
+bee_diversity_stats
+
+print("Bee Richness Stats:")
+bee_richness_stats
 
 ```
 
