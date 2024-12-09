@@ -82,14 +82,9 @@ library(raster)
 # Load landcover data as raster 
 nlcd <- rast("data/NLCD_2016_Land_Cover_OR/NLCD_2016_Land_Cover_OR.img")
 
-# crs(nlcd)
-# nlcd <- st_transform(oba_sf, crs = 32610)
-
-
-# LOWER RESOLUTION AND CREATE DF:
 # Check original resolution
-# Original: 98.4252 98.4252 
-# original_res <- res(nlcd)
+# Original: 98.4252 98.4252 ft
+res(nlcd)
 # cat("Original resolution:", original_res, "\n")
 
 
@@ -99,6 +94,8 @@ nlcd <- rast("data/NLCD_2016_Land_Cover_OR/NLCD_2016_Land_Cover_OR.img")
 ```{r}
 # Create a new template raster with the desired resolution
 # The larger the resolution, the easier to load
+
+# NOTE: need to reproject the raster before changing the crs to use meters as the unit 
 target_res <- 500  # Desired resolution in original map units (feet)
 extent_nlcd <- ext(nlcd)  # Get the extent of the original raster
 
@@ -141,18 +138,19 @@ nlcd_df <- nlcd_df %>%
 # Observe dataframe columns 
 head(nlcd_df, 50)
 
-# Visuaization test: 
+# Initial data exploration: ensuring the nlcd data loads and displays properly 
 # Create a heatmap with discrete categories in 'Layer_1'
 
-# ggplot(nlcd_df, aes(x = x, y = y, fill = LandType)) +
-#   geom_tile() +  # Create a heatmap-like plot with tiles
-#   scale_fill_viridis_d() +  # Use a discrete color scale (viridis is suitable for categorical data)
-#   theme_minimal() +  # Clean theme
-#   labs(title = "Land Cover Data",
-#        x = "Longitude",
-#        y = "Latitude",
-#        fill = "Land Cover Type") +
-#   coord_fixed()  # Fix aspect ratio to prevent distortion
+
+ggplot(nlcd_df, aes(x = x, y = y, fill = LandType)) +
+  geom_tile() +  # Create a heatmap-like plot with tiles
+  scale_fill_viridis_d() +  # Use a discrete color scale (viridis is suitable for categorical data)
+  theme_minimal() +  # Clean theme
+  labs(title = "Land Cover Data",
+       x = "Longitude",
+       y = "Latitude",
+       fill = "Land Cover Type") +
+  coord_fixed()  # Fix aspect ratio to prevent distortion
 
 ```
 
@@ -164,6 +162,7 @@ head(nlcd_df, 50)
   # Convert OBA bee observations to spatial points
   # Convert Oregon boundary to spatial object 
 
+
 # Convert OBA data to spatial points
 oba_sf <- st_as_sf(oba, coords = c("Long", "Lat"), crs = 4326)
 
@@ -172,6 +171,15 @@ oba_sf <- st_transform(oba_sf, crs = crs(nlcd_resampled))
 
 # Convert Oregon boundary to spatial object 
 or_boundary <- st_as_sf(or_boundary, coords = c("lon", "lat"), crs = crs(oba_sf))
+
+# Plot the Oregon boundary
+# Ensure that the Oregon boundary plot loads properly 
+ggplot() +
+  geom_sf(data = or_boundary, fill = "lightblue", color = "black") +
+  theme_minimal() +
+  labs(title = "Oregon Boundary",
+       x = "Longitude",
+       y = "Latitude")
 
 ```
 
@@ -184,10 +192,7 @@ str(oba_sf)
 # Check the result
 summary(oba_sf)
 ```
-```{r}
 
-or_boundary <- st_as_sf(or_boundary, coords = c("lon", "lat"), crs = crs(oba_sf))
-```
 # Elevational Band Categorization
 ## Define elevation bands (Low, Middle, High).
 ## Assign OBA observations to corresponding elevation bands.
@@ -203,6 +208,46 @@ oba_sf <- oba_sf %>%
   filter(!is.na(ElevationBand))
 
 head(oba_sf)
+```
+# Create initial visualizations and stats 
+```{r}
+# Manipulation and summarizing data in relevant ways (initial exploration of data)
+
+summary(oba_sf)
+colnames(oba_sf)
+
+# Add counts for species
+species_counts_location <- oba %>%
+  group_by(Long, Lat) %>%
+  summarise(Count = n())
+
+# Scatter plot with point size by count
+ggplot(species_counts_location, aes(x = Long, y = Lat, size = Count)) +
+  geom_point(color = "blue", alpha = 0.6) +
+  theme_minimal() +
+  labs(title = "Species Count by Location",
+       x = "Longitude",
+       y = "Latitude",
+       size = "Count")
+
+library(ggplot2)
+library(sf)
+
+# Plot colored by ElevationBand
+ggplot() +
+  # Add Oregon boundary layer
+  geom_sf(data = or_boundary, fill = "lightblue", color = "black", alpha = 0.5) +
+  
+  # OBA points colored by ElevationBand
+  geom_sf(data = oba_sf, aes(color = ElevationBand), size = 0.5, alpha = 0.7) +
+
+  theme_minimal() +
+  labs(title = "OBA Occurrences Locations Colored by Elevation Bands",
+       x = "Longitude",
+       y = "Latitude",
+       color = "Elevation Band") +
+  theme(legend.position = "right")
+
 ```
 
 
