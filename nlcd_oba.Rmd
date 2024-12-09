@@ -514,6 +514,7 @@ legend("topright", legend = unique(buffers_500m$ElevationBand),
        fill = main_colors, border = "black", title = "Elevation Bands", cex = 0.6)
 
 ```
+
 # Summary stats for boxplots 
 ```{r}
 
@@ -548,6 +549,59 @@ bee_diversity_stats
 
 print("Bee Richness Stats:")
 bee_richness_stats
+
+```
+
+# Test the hypothesis that the relationship between landscape diversity and bee species richness and diversity varies significantly across different elevational bands
+```{r}
+
+# head(buffers_500m)
+# colnames(buffers_500m)
+
+# Summarize species richness and diversity by elevation band
+summarized_by_elevation <- buffers_500m %>%
+  group_by(ElevationBand) %>%
+  summarise(
+    mean_richness = mean(normalized_richness, na.rm = TRUE),  # Mean of normalized richness
+    median_richness = median(normalized_richness, na.rm = TRUE),  # Median of normalized richness
+    mean_diversity = mean(bee_diversity, na.rm = TRUE),  # Mean of bee diversity
+    median_diversity = median(bee_diversity, na.rm = TRUE),  # Median of bee diversity
+    # Optionally add other summary statistics like SD, count, etc.
+    sd_richness = sd(normalized_richness, na.rm = TRUE),  # Standard deviation of richness
+    sd_diversity = sd(bee_diversity, na.rm = TRUE)  # Standard deviation of diversity
+  )
+
+# View the summarized data
+print(summarized_by_elevation)
+
+# ANOVA for normalized richness across elevation bands
+anova_richness <- aov(normalized_richness ~ landscape_div * ElevationBand, data = buffers_500m)
+summary(anova_richness)
+
+# ANOVA for bee diversity across elevation bands
+anova_diversity <- aov(bee_diversity ~ landscape_div * ElevationBand, data = buffers_500m)
+summary(anova_diversity)
+
+# The ANOVA results indicate that the relationship between landscape diversity and bee richness as well as bee diversity  significantly varies across different elevation bands.
+
+# Facet grid plot for normalized richness
+ggplot(buffers_500m, aes(x = landscape_div, y = normalized_richness)) +
+  geom_point(aes(color = ElevationBand)) +
+  geom_smooth(method = "lm", aes(group = ElevationBand), se = FALSE) +
+  facet_wrap(~ ElevationBand) +
+  labs(title = "Normalized Richness by Landscape Diversity and Elevation Band",
+       x = "Landscape Diversity", y = "Normalized Richness") +
+  theme_minimal()
+
+# Facet grid plot for bee diversity
+ggplot(buffers_500m, aes(x = landscape_div, y = bee_diversity)) +
+  geom_point(aes(color = ElevationBand)) +
+  geom_smooth(method = "lm", aes(group = ElevationBand), se = FALSE) +
+  facet_wrap(~ ElevationBand) +
+  labs(title = "Bee Diversity by Landscape Diversity and Elevation Band",
+       x = "Landscape Diversity", y = "Bee Diversity") +
+  theme_minimal()
+
 
 ```
 
