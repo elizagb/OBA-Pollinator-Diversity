@@ -1,11 +1,64 @@
 ---
-title: "nlcd_oba"
-author: "egb"
-date: "2024-11-20"
+title: "Exploring the Relationship Between Landscape Diversity and both Bee Diversity and Normalized Richess"
+author: "Eliza Black and Emmie Sullivan"
+date: "Dec. 2024"
 output:
-  pdf_document: default
+  pdf_document:
+    latex_engine: xelatex
   html_document: default
 ---
+
+# Introduction:
+
+## Relevant Background and References:
+
+Wild and managed pollinators benefit society in various ways, including bolstering food security, supporting livelihoods, enriching cultural values, and sustaining biodiversity and ecosystem health (Potts et al., 2016). This has made the study of pollinators a prominent subject in ecology. Pollinator populations are experiencing significant declines due to habitat loss and land-use changes, such as deforestation and agricultural expansion, as well as wider "threats to global food supply and the stability of wider pollination systems in non-crop vegetation... [and] disruptions of numerous plant-pollinator systems” (Mader et al., 2011). 
+
+This study tests how landscape diversity impacts pollinator diversity and richness. Understanding how landscape diversity affects pollinator diversity provides insight into habitat conditions that support pollinator populations. Identifying the habitat diversity levels that best support pollinator diversity can inform land management strategies to protect these populations.
+
+# Hypotheses:
+
+## Hypothesis 1
+
+- Null Hypothesis (H0): There is no statistically significant relationship between landscape diversity and bee species diversity (measured by the Shannon-Wiener index).
+- Alternative Hypothesis (H1): There is a statistically significant positive relationship between landscape diversity and bee species diversity (measured by the Shannon-Wiener index).
+
+## Hypothesis 2
+
+- Null Hypothesis (H0): There is no statistically significant relationship between landscape diversity and normalized bee species richness.
+- Alternative Hypothesis (H1): There is a statistically significant positive relationship between landscape diversity and normalized bee species richness.
+
+## Hypothesis 3
+
+- Null Hypothesis (H0): There is no difference in species richness and diversity between elevation bands (0-500m, 500-1000m, 1000-1500m, 1500m+).
+- Alternative Hypothesis (H1): The relationship between landscape diversity and both normalized bee species richness and diversity will vary significantly across different elevational bands. Specifically, at higher elevations, landscape diversity may have a weaker effect on bee species richness and diversity due to environmental constraints such as reduced floral resources and harsher weather. Conversely, the effect of landscape diversity on bee diversity and richness will be more pronounced at lower elevations.
+
+
+## Data Sources:
+
+1. **Oregon Bee Atlas (OBA)**  
+   - **Description**: Dataset compiled by citizen scientists and professional entomologists throughout Oregon. Includes bee species, geographic, and environmental metadata.
+   - **Attributes**:
+     - Species: Taxonomic identification of each bee recorded.
+     - Elevation: Elevation (in meters) at which each bee was collected.
+     - Coordinates: Latitude and longitude in decimal degrees.
+
+2. **National Land Cover Database (NLCD) - Oregon**  
+   - **Description**: Comprehensive land cover classifications, clipped to Oregon’s state boundary. Projected in Oregon Lambert (EPSG:2992).
+   - **Attributes**:
+     - 16 land cover classifications including grassland, forested areas, and developed land.
+   - **Publication Details**:
+     - Published: January 2019
+     - Updated: November 2023
+     - Publisher: U.S. Geological Survey (USGS)
+
+3. **Oregon State Boundary Dataset**  
+   - **Description**: Jurisdictional and cartographic perimeters of Oregon. Useful for resource management and mapping.
+
+
+
+
+# Load in necessary libraries 
 ```{r load-libraries, echo=FALSE, results="hide", message=FALSE, warning=FALSE}
 library(terra)
 library(ggplot2)
@@ -14,24 +67,22 @@ library(sf)
 library(tidyr)
 library(vegan)
 library(tibble) 
-
 ```
 
 # Load in Oregon basemap
-```{r plot-or}
+```{r plot-or, warning=FALSE, message=FALSE}
 or_boundary <- read_sf(dsn = "data/Oregon_State_Boundary_-2975945127261102476/Oregon_State_Boundary.shp")
 # str(or_boundary)
-
 ```
 
 # Load in OBA Data
-```{r oba-import}
+```{r oba-import, warning=FALSE, message=FALSE}
 oba <-
   read.csv("data/OBA_2018-2023_combined_dataset_working.csv")
 ```
 
 # Segment OBA data
-```{r oba-segment}
+```{r oba-segment, warning=FALSE, message=FALSE}
 
 # - Metadata we need:
 #   - `Species`: The taxonomic identification of each bee (group of closely related species)
@@ -49,7 +100,7 @@ oba$Elev <- as.numeric(oba$Elev)
 ```
 
 # Clean OBA data
-```{r oba-clean}
+```{r oba-clean, warning=FALSE, message=FALSE}
 # Remove elevation rows with null values 
 
 for (col in colnames(oba)) {
@@ -58,23 +109,20 @@ for (col in colnames(oba)) {
 }
 # Number of rows after cleaning: 41643
 # nrow(oba)
-# head(oba, 10)
 ```
 
 # Combine genus & species columns in OBA data
-```{r genus-spec}
+```{r genus-spec, warning=FALSE, message=FALSE}
 # Combine genus & species 
 GenusSpec <- paste(oba$Genus, oba$Spec, sep=" ")
 
 oba <- oba %>%
   mutate(GenusSpec)
 
-# colnames(oba)
-#nhead(oba, 10)
 ```
 
 # Load in NLCD - Oregon (National Land Cover Database)
-```{r nlcd-import, include=FALSE}
+```{r nlcd-import, include=FALSE, warning=FALSE, message=FALSE}
 library(raster)
 
 # Observe the dataset metadata here: https://www.arcgis.com/sharing/rest/content/items/9bbaa64718774bbfbf5c6ade0edf86d3/info/metadata/metadata.xml?format=default&output=html 
@@ -91,7 +139,7 @@ res(nlcd)
 ```
 
 # NLCD Manipulation
-```{r}
+```{r nlcd-manip, warning=FALSE, message=FALSE}
 # Create a new template raster with the desired resolution
 # The larger the resolution, the easier to load
 
@@ -136,12 +184,9 @@ nlcd_df <- nlcd_df %>%
   filter(!is.na(LandType))  # Remove rows with NA values
 
 # Observe dataframe columns 
-head(nlcd_df, 50)
+head(nlcd_df)
 
 # Initial data exploration: ensuring the nlcd data loads and displays properly 
-# Create a heatmap with discrete categories in 'Layer_1'
-
-
 ggplot(nlcd_df, aes(x = x, y = y, fill = LandType)) +
   geom_tile() +  # Create a heatmap-like plot with tiles
   scale_fill_viridis_d() +  # Use a discrete color scale (viridis is suitable for categorical data)
@@ -157,7 +202,7 @@ ggplot(nlcd_df, aes(x = x, y = y, fill = LandType)) +
 
 # 3. Spatial Integration
 
-```{r}
+```{r spat-integration, warning=FALSE, message=FALSE}
 # Spatial Integration
   # Convert OBA bee observations to spatial points
   # Convert Oregon boundary to spatial object 
@@ -184,20 +229,18 @@ ggplot() +
 ```
 
 # Crop oba and nlcd to or 
-```{r}
+```{r crop-oba, warning=FALSE, message=FALSE}
 # Clip OBA data to Oregon boundary
 oba_sf <- st_crop(oba_sf, or_boundary)
 str(oba_sf)
 
-# Check the result
-summary(oba_sf)
 ```
 
 # Elevational Band Categorization
 ## Define elevation bands (Low, Middle, High).
 ## Assign OBA observations to corresponding elevation bands.
 
-```{r}
+```{r elev-bands, warning=FALSE, message=FALSE}
 # Divide data into elevational bands
 elevation_bands <- cut(oba_sf$Elev, breaks = c(0, 500, 1000, 1500, Inf), 
                        labels = c("0-500m", "500-1000m", "1000-1500m", "1500m+"))
@@ -210,11 +253,11 @@ oba_sf <- oba_sf %>%
 head(oba_sf)
 ```
 # Create initial visualizations and stats 
-```{r}
+```{r initial-visuals, warning=FALSE, message=FALSE}
 # Manipulation and summarizing data in relevant ways (initial exploration of data)
 
+# Print summary stats for oba_sf
 summary(oba_sf)
-colnames(oba_sf)
 
 # Add counts for species
 species_counts_location <- oba %>%
@@ -229,9 +272,6 @@ ggplot(species_counts_location, aes(x = Long, y = Lat, size = Count)) +
        x = "Longitude",
        y = "Latitude",
        size = "Count")
-
-library(ggplot2)
-library(sf)
 
 # Plot colored by ElevationBand
 ggplot() +
@@ -250,10 +290,8 @@ ggplot() +
 
 ```
 
-
 # Creating buffers 
-```{r oba-buffers}
-
+```{r oba-buffers, warning=FALSE, message=FALSE}
 # Change to crs that uses meters, not feet 
 oba_sf <- st_transform(oba_sf, crs = 32610)
 
@@ -265,13 +303,11 @@ buffers_500m$buffer_id <- seq_len(nrow(buffers_500m))
 
 #perform spatial join: this assigns each species point to a buffer by buffer_id
 species_in_buffers <- st_join(oba_sf, buffers_500m, join = st_within)
-
 ```
 
 
-
-## Calculating and organizing species richness for each buffer 
-```{r vegan package richness}
+## Calculating and organizing normalized species richness for each buffer 
+```{r oba-richess, warning=FALSE, message=FALSE}
 
 community_matrix <- species_in_buffers %>%
     st_drop_geometry() %>%                    # Drop spatial data for tabular manipulation
@@ -319,7 +355,7 @@ ggplot() +
 ```
 
 ## Calculating species diversity (using Shannon's)
-```{r}
+```{r oba-diversity, warning=FALSE, message=FALSE}
 ## Calculating and organizing diversity (Shannon's index) for each buffer
 # Using the vegan package to compute Shannon's diversity index
 
@@ -375,9 +411,33 @@ head(buffers_500m)
 
 ```
 
+# Hypothesis Tests
+
+## Hypotheses 1 and 2
+
+- **Linear model tests**
+    - Definition/purpose (TODO)
+    - **Resulting statistics:**
+        - **Coefficient:** Shows how each unit change in predictors (land cover) affects species richness or species diversity.
+        - **p-value:** Shows the significance of land cover on species richness or diversity.
+        - **R-squared:** Indicates how much variation in species richness or diversity is explained by land cover.
+
+## Hypothesis 3: Species richness differs significantly between elevation bands
+
+- **ANOVA**
+    - **Analysis of Variance (ANOVA):**
+        - A statistical formula that compares variances across the means of different groups.
+        - It is used in the study to compare landscape diversity, bee diversity, and bee richness values across the different elevation bands.
+    - **Resulting statistics:**
+        - **Mean Square (Mean Sq):** An estimate of the variance associated with each factor.
+        - **p-value:** Tests the null hypothesis that the factor has no effect (i.e., the means are equal across groups). Very low p-values (< 0.001) suggest that the factor or interaction significantly affects the response variable.
+        - **Residuals:** Illustrate unexplained variance.
 
 
-```{r linear model-diversity}
+# Create statistics for oba diversity and richness linear models 
+```{r lm-stats, warning=FALSE, message=FALSE}
+
+# For oba diversity: 
 bee_div <- buffers_500m$bee_diversity
 names(bee_div) <- NULL
 land_div <- buffers_500m$landscape_div
@@ -385,11 +445,10 @@ land_div <- buffers_500m$landscape_div
 dats_div <- data.frame(bee_div = bee_div,
                        land_div=land_div)
 
-mod <- lm(bee_div ~ scale(land_div), data=dats_div)
-summary(mod)
-```
+model_div <- lm(bee_div ~ scale(land_div), data=dats_div)
+summary(model_div)
 
-```{r linear model- richness}
+# For oba normalized richness: 
 bee_rich <- buffers_500m$normalized_richness
 names(bee_rich) <- NULL
 
@@ -397,13 +456,13 @@ names(bee_rich) <- NULL
 dats_rich <- data.frame(bee_rich = bee_rich,
                        land_div=land_div)
 
-mod2 <- lm(bee_rich ~ scale(land_div), data=dats_rich)
-summary(mod2)
-
-
+model_rich <- lm(bee_rich ~ scale(land_div), data=dats_rich)
+summary(model_rich)
 ```
 
-```{r}
+# Plot linear models: Landscape diversity vs. bee richness / bee diversity 
+```{r lm-plots, warning=FALSE, message=FALSE}
+
 # Set up plot colors
 main_colors <- c("#008000", "#FF1493", "#1E90FF", "#FFA500")
 
@@ -423,12 +482,6 @@ ggplot(buffers_500m, aes(x = landscape_div, y = normalized_richness)) +
     plot.caption = element_text(hjust = 0)  # Left-align caption
   )
 
-
-# Richness of 1: if a bee is all alone in a buffer (1/1)
-# Better labels for elevations 
-```
-
-```{r}
 # Scatter plot of landscape diversity vs. bee species richness
 ggplot(buffers_500m, aes(x = landscape_div, y = bee_diversity)) +
   geom_point(aes(color = ElevationBand), alpha = 0.7) +  # Color by ElevationBand
@@ -444,10 +497,10 @@ ggplot(buffers_500m, aes(x = landscape_div, y = bee_diversity)) +
   theme(
     plot.caption = element_text(hjust = 0)  # Left-align caption
   )
-
 ```
 
-```{r}
+# Create map to display buffers overlaying nlcd
+```{r buffer-plot, warning=FALSE, message=FALSE}
 # Plot landcover, oba, buffers 
 
 # Import colors
@@ -474,7 +527,9 @@ ggplot() +
   theme_minimal()
 ```
 
-```{r}
+# Exploring secondary relationships: 
+# Create boxplots to view relationship between elevation bands and other variables
+```{r elev-boxplots, warning=FALSE, message=FALSE}
 # Create boxplots for diversity:
 
 # Boxplot comparing landscape diversity for elevation bands 
@@ -541,22 +596,14 @@ bee_richness_stats <- aggregate(bee_rich ~ ElevationBand, data = buffers_500m,
 bee_richness_stats <- do.call(data.frame, bee_richness_stats)
 
 # Print the results
-print("Landscape Diversity Stats:")
 landscape_stats
-
-print("Bee Diversity Stats:")
 bee_diversity_stats
-
-print("Bee Richness Stats:")
 bee_richness_stats
 
 ```
 
 # Test the hypothesis that the relationship between landscape diversity and bee species richness and diversity varies significantly across different elevational bands
 ```{r}
-
-# head(buffers_500m)
-# colnames(buffers_500m)
 
 # Summarize species richness and diversity by elevation band
 summarized_by_elevation <- buffers_500m %>%
@@ -602,6 +649,44 @@ ggplot(buffers_500m, aes(x = landscape_div, y = bee_diversity)) +
        x = "Landscape Diversity", y = "Bee Diversity") +
   theme_minimal()
 
-
 ```
+
+# Conclusion: summarize findings and address orignal hypotheses
+
+## Landscape Diversity in Relation to Bee Diversity
+
+There is a statistically significant positive relationship between bee diversity and landscape diversity. However, the effect size is small (low \(R^2\)), meaning landscape diversity explains very little of the variation in bee diversity.
+
+## Landscape Diversity in Relation to Bee Richness
+
+There is a statistically significant negative relationship between bee richness and landscape diversity. However, the effect size is small (low \(R^2\)), meaning landscape diversity explains very little of the variation in bee richness.
+
+## Comparisons
+
+- **Effect Size**: The slope is stronger for bee diversity than bee richness (absolute value of coefficients: \(0.0969\) vs \(0.0339\)).
+- **Model Fit**: The bee richness model explains slightly more variability (\(R^2 = 0.02442\)) than the bee diversity model (\(R^2 = 0.01552\)).
+- **Residual Standard Error**: The errors are smaller in the bee richness model (\(0.2145\)) compared to bee diversity (\(0.772\)).
+
+## Variance by Elevation of Landscape Diversity’s Relation to Bee Diversity and Bee Richness
+
+Landscape diversity and elevation band both significantly predict the response variable (bee diversity or richness), as indicated by the low p-values (< \(2 \times 10^{-16}\)) and large F-values.
+
+The significant interaction between these two predictors (landscape diversity and elevation band) suggests that the relationship between landscape diversity and the response variables (bee richness and diversity) varies across elevation bands.
+
+The high residual variance, indicated by the residual sum of squares, illustrates that a large portion of the variance is not explained by the model and that other variables are influencing the response variables.
+
+## Secondary Relationships
+
+- **Mean Landscape Diversity**: Mean landscape diversity decreases as elevation increases, with the highest values in the \(0-500\)m band (mean = \(1.27\)) and the lowest in the \(1500\)m+ band (mean = \(0.64\)).
+- **Bee Diversity**: Higher bee diversity is observed at low and high elevations (mean = \(2.06\) at \(0-500\)m and \(1.79\) at \(1500\)m+).
+- **Bee Richness**: Bee richness peaks at mid-elevations, with the highest mean at \(1000-1500\)m (mean = \(0.47\)), rising from \(0.35\) at \(0-500\)m and slightly declining to \(0.46\) at \(1500\)m+.
+
+## Limits and Considerations
+
+Data collected by citizen scientists introduces potential sampling biases. For example, the large number of buffers housing a single data point could reflect instances where scientists only recorded specialized bees. The study compares bee diversity and richness to clarify these potential biases and observe how they manifest differently.
+
+### Recommendations for Future Studies
+
+A future modification could involve grouping land cover types differently, such as combining developed land categories. This could reduce sampling bias and enhance the model’s explanatory power.
+
 
