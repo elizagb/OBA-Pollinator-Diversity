@@ -418,7 +418,7 @@ head(buffers_500m)
 ## Hypotheses 1 and 2
 
 - **Linear model tests**
-    - The purpose of this test is to estimate the strength and direction of the realtionshpi between lanscape diversity and bee species richness and diversity.
+    - The purpose is to estimate the strength and direction of the realtionshpi between lanscape diversity and bee species richness and diversity.
     - **Resulting statistics:**
         - **Coefficient:** Shows how each unit change in predictors (land cover) affects species richness or species diversity.
         - **p-value:** Shows the significance of land cover on species richness or diversity.
