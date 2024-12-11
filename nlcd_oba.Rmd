@@ -14,7 +14,9 @@ output:
 
 Wild and managed pollinators benefit society in various ways, including bolstering food security, supporting livelihoods, enriching cultural values, and sustaining biodiversity and ecosystem health (Potts et al., 2016). This has made the study of pollinators a prominent subject in ecology. Pollinator populations are experiencing significant declines due to habitat loss and land-use changes, such as deforestation and agricultural expansion, as well as wider "threats to global food supply and the stability of wider pollination systems in non-crop vegetation... [and] disruptions of numerous plant-pollinator systems” (Mader et al., 2011). 
 
-This study tests how landscape diversity impacts pollinator diversity and richness. Understanding how landscape diversity affects pollinator diversity provides insight into habitat conditions that support pollinator populations. Identifying the habitat diversity levels that best support pollinator diversity can inform land management strategies to protect these populations.
+It has been established that "diversity begets diversity", that is, local environmental heterogeneity is a key factor driving community richness (Rosenzweig, 1995, as cited in Ponisio, 2020). Previous research has shown that local fire severity is a strong predictor of wild bee diversity in mixed-conifer forests in southwestern Oregon (Galbraith et al, 2019), but few studies have been conducted state-wide to examine the relationship between bee diversity and landscape diversity overall. 
+
+This study tests how landscape diversity impacts bee diversity and richness. Given the pressing threats to bee populations and their critical ecological roles, it is vital to explore how landscape diversity supports pollinator diversity. Understanding this relationship provides insight into habitat conditions that support bee populations. Identifying the habitat diversity levels that best support bee diversity can inform land management strategies to protect these populations.
 
 # Hypotheses:
 
@@ -685,8 +687,30 @@ The high residual variance, indicated by the residual sum of squares, illustrate
 
 Data collected by citizen scientists introduces potential sampling biases. For example, the large number of buffers housing a single data point could reflect instances where scientists only recorded specialized bees. The study compares bee diversity and richness to clarify these potential biases and observe how they manifest differently.
 
-### Recommendations for Future Studies
+## Recommendations for Future Studies
 
 A future modification could involve grouping land cover types differently, such as combining developed land categories. This could reduce sampling bias and enhance the model’s explanatory power.
+
+## References
+
+Galbraith, S. M., J. H. Cane, A. R. Moldenke, and J. W. Rivers. 2019. Wild bee diversity increases with local fire
+severity in a fire-prone landscape. Ecosphere 10(4):e02668. 10.1002/ecs2.2668
+
+New, T.R.Eric Mader, et al: attracting native pollinators. Protecting North America’s bees and butterflies. The Xerces Society Guide. J Insect Conserv 15, 611–612 (2011). https://doi.org/10.1007/s10841-011-9409-4
+
+Potts, S., Imperatriz-Fonseca, V., Ngo, H. et al. Safeguarding pollinators and their values to human well-being. Nature 540, 220–229 (2016). https://doi.org/10.1038/nature20588
+
+Ponisio LC. Pyrodiversity promotes interaction complementarity and population resistance. Ecol Evol. 2020 Mar 26;10(10):4431-4447. doi: 10.1002/ece3.6210. PMID: 32489608; PMCID: PMC7246207.
+
+Rosenzweig, M. L. (1995). Species diversity in space and time. Cambridge, UK: Cambridge University Press.
+
+
+
+
+
+
+
+
+
 
 
