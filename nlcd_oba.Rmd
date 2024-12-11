@@ -58,9 +58,7 @@ This study tests how landscape diversity impacts bee diversity and richness. Giv
    - **Description**: Jurisdictional and cartographic perimeters of Oregon. Useful for resource management and mapping.
 
 
-
-
-# Load in necessary libraries 
+# Load in necessary libraries:
 ```{r load-libraries, echo=FALSE, results="hide", message=FALSE, warning=FALSE}
 library(terra)
 library(ggplot2)
@@ -71,19 +69,19 @@ library(vegan)
 library(tibble) 
 ```
 
-# Load in Oregon basemap
+# Load in Oregon basemap:
 ```{r plot-or, warning=FALSE, message=FALSE}
 or_boundary <- read_sf(dsn = "data/Oregon_State_Boundary_-2975945127261102476/Oregon_State_Boundary.shp")
 # str(or_boundary)
 ```
 
-# Load in OBA Data
+# Load in OBA Data:
 ```{r oba-import, warning=FALSE, message=FALSE}
 oba <-
   read.csv("data/OBA_2018-2023_combined_dataset_working.csv")
 ```
 
-# Segment OBA data
+# Segment OBA data:
 ```{r oba-segment, warning=FALSE, message=FALSE}
 
 # - Metadata we need:
@@ -101,7 +99,7 @@ oba$Elev <- as.numeric(oba$Elev)
 
 ```
 
-# Clean OBA data
+# Clean OBA data:
 ```{r oba-clean, warning=FALSE, message=FALSE}
 # Remove elevation rows with null values 
 
@@ -113,7 +111,7 @@ for (col in colnames(oba)) {
 # nrow(oba)
 ```
 
-# Combine genus & species columns in OBA data
+# Combine genus & species columns in OBA data:
 ```{r genus-spec, warning=FALSE, message=FALSE}
 # Combine genus & species 
 GenusSpec <- paste(oba$Genus, oba$Spec, sep=" ")
@@ -123,7 +121,7 @@ oba <- oba %>%
 
 ```
 
-# Load in NLCD - Oregon (National Land Cover Database)
+# Load in NLCD - Oregon (National Land Cover Database):
 ```{r nlcd-import, include=FALSE, warning=FALSE, message=FALSE}
 library(raster)
 
@@ -134,18 +132,16 @@ nlcd <- rast("data/NLCD_2016_Land_Cover_OR/NLCD_2016_Land_Cover_OR.img")
 
 # Check original resolution
 # Original: 98.4252 98.4252 ft
-res(nlcd)
-# cat("Original resolution:", original_res, "\n")
-
+# res(nlcd)
 
 ```
 
-# NLCD Manipulation
+# NLCD Manipulation:
 ```{r nlcd-manip, warning=FALSE, message=FALSE}
 # Create a new template raster with the desired resolution
 # The larger the resolution, the easier to load
 
-# NOTE: need to reproject the raster before changing the crs to use meters as the unit 
+# NOTE: need to reproject the raster before changing the crs to use meters as the unit due to the large file size 
 target_res <- 500  # Desired resolution in original map units (feet)
 extent_nlcd <- ext(nlcd)  # Get the extent of the original raster
 
@@ -202,8 +198,7 @@ ggplot(nlcd_df, aes(x = x, y = y, fill = LandType)) +
 ```
 
 
-# 3. Spatial Integration
-
+# 3. Spatial Integration:
 ```{r spat-integration, warning=FALSE, message=FALSE}
 # Spatial Integration
   # Convert OBA bee observations to spatial points
@@ -230,7 +225,7 @@ ggplot() +
 
 ```
 
-# Crop oba and nlcd to or 
+# Crop oba and nlcd to or:
 ```{r crop-oba, warning=FALSE, message=FALSE}
 # Clip OBA data to Oregon boundary
 oba_sf <- st_crop(oba_sf, or_boundary)
@@ -254,7 +249,8 @@ oba_sf <- oba_sf %>%
 
 head(oba_sf)
 ```
-# Create initial visualizations and stats 
+
+# Create initial visualizations and stats:
 ```{r initial-visuals, warning=FALSE, message=FALSE}
 # Manipulation and summarizing data in relevant ways (initial exploration of data)
 
@@ -292,7 +288,7 @@ ggplot() +
 
 ```
 
-# Creating buffers 
+# Creating buffers:
 ```{r oba-buffers, warning=FALSE, message=FALSE}
 # Change to crs that uses meters, not feet 
 oba_sf <- st_transform(oba_sf, crs = 32610)
@@ -307,8 +303,7 @@ buffers_500m$buffer_id <- seq_len(nrow(buffers_500m))
 species_in_buffers <- st_join(oba_sf, buffers_500m, join = st_within)
 ```
 
-
-## Calculating and organizing normalized species richness for each buffer 
+## Calculating and organizing normalized species richness for each buffer:
 ```{r oba-richess, warning=FALSE, message=FALSE}
 
 community_matrix <- species_in_buffers %>%
@@ -356,7 +351,7 @@ ggplot() +
   theme_minimal()
 ```
 
-## Calculating species diversity (using Shannon's)
+## Calculating species diversity (using Shannon's):
 ```{r oba-diversity, warning=FALSE, message=FALSE}
 ## Calculating and organizing diversity (Shannon's index) for each buffer
 # Using the vegan package to compute Shannon's diversity index
@@ -378,7 +373,7 @@ buffers_500m <- buffers_500m %>%
 head(buffers_500m)
 ```
 
-## Find landscape diversity for each buffer; append to buffers_500m
+## Find landscape diversity for each buffer; append to buffers_500m:
 ```{r}
 buffers_500m <- st_transform(buffers_500m, crs = st_crs(nlcd_resampled))
 # Spatial join to extract land cover types from NLCD raster within each buffer
@@ -439,28 +434,43 @@ head(buffers_500m)
 # Create statistics for oba diversity and richness linear models 
 ```{r lm-stats, warning=FALSE, message=FALSE}
 
-# For oba diversity: 
+# Reusable function for creating linear models and summarizing stats
+linear_model <- function(dependent_var, independent_var, dataset, scale_independent = TRUE) {
+  # Ensure dependent var is not named
+  names(dependent_var) <- NULL
+  
+  # Create data frame for the model
+  data <- data.frame(dependent_var = dependent_var, independent_var = independent_var)
+  
+  # Scale independent var if needed
+  if (scale_independent) {
+    model <- lm(dependent_var ~ scale(independent_var), data = data)
+  } else {
+    model <- lm(dependent_var ~ independent_var, data = data)
+  }
+  
+  # Return the model summary
+  return(summary(model))
+}
+
 bee_div <- buffers_500m$bee_diversity
-names(bee_div) <- NULL
+bee_rich <- buffers_500m$normalized_richness
 land_div <- buffers_500m$landscape_div
 
-dats_div <- data.frame(bee_div = bee_div,
-                       land_div=land_div)
+# Model for bee diversity
+summary_div <- linear_model(dependent_var = bee_div, independent_var = land_div, dataset = buffers_500m)
 
-model_div <- lm(bee_div ~ scale(land_div), data=dats_div)
-summary(model_div)
+# Model for normalized bee richness
+summary_rich <- linear_model(dependent_var = bee_rich, independent_var = land_div, dataset = buffers_500m)
 
-# For oba normalized richness: 
-bee_rich <- buffers_500m$normalized_richness
-names(bee_rich) <- NULL
+# Print summaries
+summary_div
+summary_rich
 
-
-dats_rich <- data.frame(bee_rich = bee_rich,
-                       land_div=land_div)
-
-model_rich <- lm(bee_rich ~ scale(land_div), data=dats_rich)
-summary(model_rich)
 ```
+## Results:
+Both linear models show statistically significant relationships between bee richness/diversity and the scaled landscape diversity, with p-values less than 2e-16. However, the very low R-squared values (0.0155 and 0.0244), indicate that the independent variable explains only a small amount of the variability in the bee richness/diversity.
+
 
 # Plot linear models: Landscape diversity vs. bee richness / bee diversity 
 ```{r lm-plots, warning=FALSE, message=FALSE}
@@ -472,13 +482,13 @@ main_colors <- c("#008000", "#FF1493", "#1E90FF", "#FFA500")
 ggplot(buffers_500m, aes(x = landscape_div, y = normalized_richness)) +
   geom_point(aes(color = ElevationBand), alpha = 0.7) +  # Color by ElevationBand
   scale_color_manual(values = main_colors) +
+  geom_smooth(method = "lm", color = "black") +
   labs(
     title = "Landscape Diversity vs. Bee Species Richness",
     x = "Landscape Diversity (Shannon's Index)",
     y = "Normalized Bee Species Richness",
     caption = "The black line represents the linear regression fit."
   ) +
-  geom_smooth(method = "lm", color = "black") +
   theme_minimal() +
   theme(
     plot.caption = element_text(hjust = 0)  # Left-align caption
@@ -488,13 +498,12 @@ ggplot(buffers_500m, aes(x = landscape_div, y = normalized_richness)) +
 ggplot(buffers_500m, aes(x = landscape_div, y = bee_diversity)) +
   geom_point(aes(color = ElevationBand), alpha = 0.7) +  # Color by ElevationBand
   scale_color_manual(values = main_colors) + 
+  geom_smooth(method = "lm", color = "black") +
   labs(
     title = "Landscape Diversity vs. Bee Species Diversity",
     x = "Landscape Diversity (Shannon's Index)",
     y = "Bee Species Diversity (Shannon's Index)",
-    caption = "The black line represents the linear regression fit."
-  ) +
-  geom_smooth(method = "lm", color = "black") +
+    caption = "The black line represents the linear regression fit.") + 
   theme_minimal() +
   theme(
     plot.caption = element_text(hjust = 0)  # Left-align caption
@@ -525,7 +534,7 @@ ggplot() +
   labs(title = "Oregon Land Cover with Buffered Bee Observations",
        x = "Longitude",
        y = "Latitude", 
-       caption = "Buffers (500m) are plotted as black circles")
+       caption = "Buffers (500m) are plotted as black circles") + 
   theme_minimal()
 ```
 
@@ -572,7 +581,7 @@ legend("topright", legend = unique(buffers_500m$ElevationBand),
 
 ```
 
-# Summary stats for boxplots 
+# Summary stats for boxplots:
 ```{r}
 
 # Summary stats for Landscape Diversity by Elevation Band
@@ -604,7 +613,12 @@ bee_richness_stats
 
 ```
 
-# Test the hypothesis that the relationship between landscape diversity and bee species richness and diversity varies significantly across different elevational bands
+## Results: 
+- Highest bee diversity at lowest elevation band
+- Landscape diversity decreases as elevation increases
+- Lowest bee richness at lowest elevation band
+
+# Test the hypothesis that the relationship between landscape diversity and bee species richness and diversity varies significantly across different elevational bands:
 ```{r}
 
 # Summarize species richness and diversity by elevation band
