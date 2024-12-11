@@ -33,7 +33,7 @@ This study tests how landscape diversity impacts bee diversity and richness. Giv
 ## Hypothesis 3
 
 - Null Hypothesis (H0): There is no difference in species richness and diversity between elevation bands (0-500m, 500-1000m, 1000-1500m, 1500m+).
-- Alternative Hypothesis (H1): The relationship between landscape diversity and both normalized bee species richness and diversity will vary significantly across different elevational bands. Specifically, at higher elevations, landscape diversity may have a weaker effect on bee species richness and diversity due to environmental constraints such as reduced floral resources and harsher weather. Conversely, the effect of landscape diversity on bee diversity and richness will be more pronounced at lower elevations.
+- Alternative Hypothesis (H1): The relationship between landscape diversity and both normalized bee species richness and diversity will vary significantly across different elevational bands. Specifically, at higher elevations, landscape diversity may have a weaker effect on bee species richness and diversity due to environmental constraints such as reduced floral resources and harsher weather. Conversely, the effect of landscape diversity on bee diversity and richness will be more pronounced at lower elevations. 
 
 
 ## Data Sources:
@@ -312,8 +312,8 @@ species_in_buffers <- st_join(oba_sf, buffers_500m, join = st_within)
 ```{r oba-richess, warning=FALSE, message=FALSE}
 
 community_matrix <- species_in_buffers %>%
-    st_drop_geometry() %>%                    # Drop spatial data for tabular manipulation
-    group_by(buffer_id, GenusSpec.x) %>%          # Replace `buffer_id` with your buffer identifier column
+    st_drop_geometry() %>%                    
+    group_by(buffer_id, GenusSpec.x) %>%         
     summarize(count = n()) %>%                # Count occurrences
     pivot_wider(names_from = GenusSpec.x, values_from = count, values_fill = 0) %>%
     column_to_rownames("buffer_id")           # Set buffer IDs as row names
@@ -418,7 +418,7 @@ head(buffers_500m)
 ## Hypotheses 1 and 2
 
 - **Linear model tests**
-    - Definition/purpose (TODO)
+    - The purpose of this test is to estimate the strength and direction of the realtionshpi between lanscape diversity and bee species richness and diversity.
     - **Resulting statistics:**
         - **Coefficient:** Shows how each unit change in predictors (land cover) affects species richness or species diversity.
         - **p-value:** Shows the significance of land cover on species richness or diversity.
@@ -690,6 +690,7 @@ Data collected by citizen scientists introduces potential sampling biases. For e
 ## Recommendations for Future Studies
 
 A future modification could involve grouping land cover types differently, such as combining developed land categories. This could reduce sampling bias and enhance the model’s explanatory power.
+\newpage
 
 ## References
 
